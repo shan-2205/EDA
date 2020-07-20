@@ -6,16 +6,16 @@ import pandas as pd
 import scipy.stats as stats
 import math
 np.random.seed(6)
-school_ages=stats.poisson.rvs(loc=18,mu=35,size=1500)
+school_ages=stats.poisson.rvs(mu=35,size=1500)
 #size-total values we want
 #mu=mean and loc is left most value and its poisson distribution(poisson rvs)
-classA_ages=stats.poisson.rvs(loc=18,mu=30,size=60)
-
+classA_ages=stats.poisson.rvs(mu=30,size=60)
+classA_ages.mean()
 
 
 classA_ages.mean()
 
-_,p_value=stats.ttest_1samp(a=classA_ages,popmean=school_ages.mean())
+ttest,p_value=stats.ttest_1samp(a=classA_ages,popmean=school_ages.mean())
 
 p_value
 
