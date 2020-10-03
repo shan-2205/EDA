@@ -1,0 +1,5554 @@
++*In[1]:*+
+[source, ipython3]
+----
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+### so that u dont have warnings
+from warnings import filterwarnings
+filterwarnings('ignore')
+----
+
+==== Columns description
+
+1.  url contains the url of the restaurant in the zomato website
+2.  address contains the address of the restaurant in Bengaluru
+3.  name contains the name of the restaurant
+4.  online_order whether online ordering is available in the restaurant
+or not
+5.  book_table table book option available or not
+6.  rate contains the overall rating of the restaurant out of 5
+7.  votes contains total number of rating for the restaurant as of the
+above mentioned date
+8.  phone contains the phone number of the restaurant
+9.  location contains the neighborhood in which the restaurant is
+located
+10. rest_type restaurant type
+11. dish_liked dishes people liked in the restaurant
+12. cuisines food styles, separated by comma
+13. approx_cost(for two people) contains the approximate cost for meal
+for two people
+14. reviews_list list of tuples containing reviews for the restaurant,
+each tuple
+15. menu_item contains list of menus available in the restaurant
+16. listed_in(type) type of meal
+17. listed_in(city) contains the neighborhood in which the restaurant is
+listed
+
+
++*In[2]:*+
+[source, ipython3]
+----
+#read dataset
+df=pd.read_csv('F:/Data Science projects/EDA/zomato-bangalore-restaurants/zomato.csv')
+df.head()
+----
+
+
++*Out[2]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1/5 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1/5 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8/5
+|918 |+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros,
+Cannelloni, Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800
+|[('Rated 3.0', "RATED\n Ambience is not that ... |[] |Buffet
+|Banashankari
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7/5 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa
+|South Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8/5 |166
+|+91 8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining
+|Panipuri, Gol Gappe |North Indian, Rajasthani |600 |[('Rated 4.0',
+'RATED\n Very good restaurant ... |[] |Buffet |Banashankari
+|=======================================================================
+----
+
+
++*In[3]:*+
+[source, ipython3]
+----
+df.shape
+----
+
+
++*Out[3]:*+
+----(51717, 17)----
+
+
++*In[4]:*+
+[source, ipython3]
+----
+df.dtypes
+----
+
+
++*Out[4]:*+
+----url                            object
+address                        object
+name                           object
+online_order                   object
+book_table                     object
+rate                           object
+votes                           int64
+phone                          object
+location                       object
+rest_type                      object
+dish_liked                     object
+cuisines                       object
+approx_cost(for two people)    object
+reviews_list                   object
+menu_item                      object
+listed_in(type)                object
+listed_in(city)                object
+dtype: object----
+
+
++*In[5]:*+
+[source, ipython3]
+----
+len(df['name'].unique())
+----
+
+
++*Out[5]:*+
+----8792----
+
+
++*In[6]:*+
+[source, ipython3]
+----
+df.isna().sum()
+----
+
+
++*Out[6]:*+
+----url                                0
+address                            0
+name                               0
+online_order                       0
+book_table                         0
+rate                            7775
+votes                              0
+phone                           1208
+location                          21
+rest_type                        227
+dish_liked                     28078
+cuisines                          45
+approx_cost(for two people)      346
+reviews_list                       0
+menu_item                          0
+listed_in(type)                    0
+listed_in(city)                    0
+dtype: int64----
+
+==== getting all NAN features
+
+
++*In[7]:*+
+[source, ipython3]
+----
+feature_na=[feature for feature in df.columns if df[feature].isnull().sum()>0]
+feature_na
+----
+
+
++*Out[7]:*+
+----['rate',
+ 'phone',
+ 'location',
+ 'rest_type',
+ 'dish_liked',
+ 'cuisines',
+ 'approx_cost(for two people)']----
+
+
++*In[8]:*+
+[source, ipython3]
+----
+#% of missing values
+for feature in feature_na:
+    print('{} has {} % missing values'.format(feature,np.round(df[feature].isnull().sum()/len(df)*100,4)))
+----
+
+
++*Out[8]:*+
+----
+rate has 15.0337 % missing values
+phone has 2.3358 % missing values
+location has 0.0406 % missing values
+rest_type has 0.4389 % missing values
+dish_liked has 54.2916 % missing values
+cuisines has 0.087 % missing values
+approx_cost(for two people) has 0.669 % missing values
+----
+
+
++*In[9]:*+
+[source, ipython3]
+----
+df['rate'].unique()
+----
+
+
++*Out[9]:*+
+----array(['4.1/5', '3.8/5', '3.7/5', '3.6/5', '4.6/5', '4.0/5', '4.2/5',
+       '3.9/5', '3.1/5', '3.0/5', '3.2/5', '3.3/5', '2.8/5', '4.4/5',
+       '4.3/5', 'NEW', '2.9/5', '3.5/5', nan, '2.6/5', '3.8 /5', '3.4/5',
+       '4.5/5', '2.5/5', '2.7/5', '4.7/5', '2.4/5', '2.2/5', '2.3/5',
+       '3.4 /5', '-', '3.6 /5', '4.8/5', '3.9 /5', '4.2 /5', '4.0 /5',
+       '4.1 /5', '3.7 /5', '3.1 /5', '2.9 /5', '3.3 /5', '2.8 /5',
+       '3.5 /5', '2.7 /5', '2.5 /5', '3.2 /5', '2.6 /5', '4.5 /5',
+       '4.3 /5', '4.4 /5', '4.9/5', '2.1/5', '2.0/5', '1.8/5', '4.6 /5',
+       '4.9 /5', '3.0 /5', '4.8 /5', '2.3 /5', '4.7 /5', '2.4 /5',
+       '2.1 /5', '2.2 /5', '2.0 /5', '1.8 /5'], dtype=object)----
+
+
++*In[10]:*+
+[source, ipython3]
+----
+df.dropna(axis='index',subset=['rate'],inplace=True)
+----
+
+
++*In[11]:*+
+[source, ipython3]
+----
+df.shape
+----
+
+
++*Out[11]:*+
+----(43942, 17)----
+
+
++*In[12]:*+
+[source, ipython3]
+----
+def split(x):
+    return x.split('/')[0]
+----
+
+
++*In[13]:*+
+[source, ipython3]
+----
+df['rate']=df['rate'].apply(split)
+----
+
+
++*In[14]:*+
+[source, ipython3]
+----
+df.head()
+----
+
+
++*Out[14]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8 |918
+|+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros, Cannelloni,
+Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800 |[('Rated
+3.0', "RATED\n Ambience is not that ... |[] |Buffet |Banashankari
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa |South
+Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8 |166 |+91
+8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining |Panipuri, Gol
+Gappe |North Indian, Rajasthani |600 |[('Rated 4.0', 'RATED\n Very good
+restaurant ... |[] |Buffet |Banashankari
+|=======================================================================
+----
+
+
++*In[15]:*+
+[source, ipython3]
+----
+df['rate'].unique()
+----
+
+
++*Out[15]:*+
+----array(['4.1', '3.8', '3.7', '3.6', '4.6', '4.0', '4.2', '3.9', '3.1',
+       '3.0', '3.2', '3.3', '2.8', '4.4', '4.3', 'NEW', '2.9', '3.5',
+       '2.6', '3.8 ', '3.4', '4.5', '2.5', '2.7', '4.7', '2.4', '2.2',
+       '2.3', '3.4 ', '-', '3.6 ', '4.8', '3.9 ', '4.2 ', '4.0 ', '4.1 ',
+       '3.7 ', '3.1 ', '2.9 ', '3.3 ', '2.8 ', '3.5 ', '2.7 ', '2.5 ',
+       '3.2 ', '2.6 ', '4.5 ', '4.3 ', '4.4 ', '4.9', '2.1', '2.0', '1.8',
+       '4.6 ', '4.9 ', '3.0 ', '4.8 ', '2.3 ', '4.7 ', '2.4 ', '2.1 ',
+       '2.2 ', '2.0 ', '1.8 '], dtype=object)----
+
+
++*In[16]:*+
+[source, ipython3]
+----
+df.replace('NEW',0,inplace=True)
+----
+
+
++*In[17]:*+
+[source, ipython3]
+----
+df.replace('-',0,inplace=True)
+----
+
+
++*In[18]:*+
+[source, ipython3]
+----
+df['rate']=df['rate'].astype(float)
+----
+
+=== calculate avg rating of each resturant
+
+
++*In[19]:*+
+[source, ipython3]
+----
+df.groupby('name')['rate'].mean().nlargest(20).plot.bar()
+----
+
+
++*Out[19]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b42220108>
+![png](output_21_1.png)
+----
+
+
++*In[20]:*+
+[source, ipython3]
+----
+df_rate=df.groupby('name')['rate'].mean().to_frame()
+df_rate=df_rate.reset_index()
+df_rate.columns=['restaurant','rating']
+df_rate.head(20)
+----
+
+
++*Out[20]:*+
+----
+[cols=",,",options="header",]
+|=================================================
+| |restaurant |rating
+|0 |#FeelTheROLL |3.400000
+|1 |#L-81 Cafe |3.900000
+|2 |#refuel |3.700000
+|3 |1000 B.C |3.200000
+|4 |100ÃƒÂƒÃ‚ÂƒÃƒÂ‚Ã‚Â‚ÃƒÂƒÃ‚Â‚ÃƒÂ‚Ã‚Â°C |3.700000
+|5 |11 to 11 Express Biriyanis |3.500000
+|6 |1131 Bar + Kitchen |4.500000
+|7 |12th Main - Grand Mercure |4.100000
+|8 |1441 Pizzeria |4.100000
+|9 |1522 - The Pub |4.212000
+|10 |154 Breakfast Club |4.000000
+|11 |1722 Urban Bistro |4.100000
+|12 |18+ Ice Cafe |3.500000
+|13 |1947 |4.021429
+|14 |1980s Games Cafe |3.400000
+|15 |1992 Chats - Space |3.700000
+|16 |1Q1 |4.300000
+|17 |1TO3 Kitchen |3.100000
+|18 |2 Statez |3.700000
+|19 |20 Char - Sterlings MAC Hotel |4.000000
+|=================================================
+----
+
+
++*In[21]:*+
+[source, ipython3]
+----
+df_rate.shape
+----
+
+
++*Out[21]:*+
+----(7162, 2)----
+
+==== alternative is create a list in which u have all the restaurants &
+in another list,we have all ratings & then using zip we can create a
+dataframe
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+'''restaurant=[]
+avg_rating=[]
+for key,name_df in df.groupby('name'):
+    restaurant.append(key)
+    avg_rating.append(np.mean(name_df['rate'])'''
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+'''df_rate=pd.DataFrame(zip(restaurant,avg_rating))
+df_rate.columns=['restaurant','rating']
+df_rate.head(20)'''
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+'''df_rate.shape'''
+----
+
+===== Rating distribution
+
+
++*In[25]:*+
+[source, ipython3]
+----
+sns.set_style(style='whitegrid')
+sns.distplot(df_rate['rating'])
+----
+
+
++*Out[25]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b00f684c8>
+![png](output_29_1.png)
+----
+
+===== Almost more than 50 percent of restaurants has rating between 3
+and 4. Restaurants having rating more than 4.5 are very rare.
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== Which are the top restaurant chains in Bangaluru?
+
+
++*In[26]:*+
+[source, ipython3]
+----
+plt.figure(figsize=(10,7))
+chains=df['name'].value_counts()[0:20]
+sns.barplot(x=chains,y=chains.index,palette='deep')
+plt.title("Most famous restaurants chains in Bangaluru")
+plt.xlabel("Number of outlets") 
+----
+
+
++*Out[26]:*+
+----Text(0.5, 0, 'Number of outlets')
+![png](output_33_1.png)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== How many of the restuarants do not accept online orders?
+
+
++*In[27]:*+
+[source, ipython3]
+----
+x=df['online_order'].value_counts()
+labels=['accepted','not accepted']
+plt.pie(x,explode=[0.0,0.1],autopct='%1.1f%%')
+----
+
+
++*Out[27]:*+
+----([<matplotlib.patches.Wedge at 0x5b012fb3c8>,
+  <matplotlib.patches.Wedge at 0x5b01431088>],
+ [Text(-0.481488774517003, 0.9890240442042423, ''),
+  Text(0.5252605823084886, -1.0789352717716423, '')],
+ [Text(-0.26263024064563795, 0.5394676604750411, '64.4%'),
+  Text(0.30640200634661835, -0.629378908533458, '35.6%')])
+![png](output_36_1.png)
+----
+
+===== using plotly, How many of the restuarants do not accept online
+orders?
+
+
++*In[28]:*+
+[source, ipython3]
+----
+!pip install plotly
+----
+
+
++*Out[28]:*+
+----
+Requirement already satisfied: plotly in c:\users\mcr\anaconda3\lib\site-packages (4.5.4)
+Requirement already satisfied: retrying>=1.3.3 in c:\users\mcr\anaconda3\lib\site-packages (from plotly) (1.3.3)
+Requirement already satisfied: six in c:\users\mcr\anaconda3\lib\site-packages (from plotly) (1.14.0)
+----
+
+
++*In[29]:*+
+[source, ipython3]
+----
+import plotly.express as px
+----
+
+
++*In[30]:*+
+[source, ipython3]
+----
+x=df['online_order'].value_counts()
+labels=['accepted','not accepted']
+----
+
+
++*In[31]:*+
+[source, ipython3]
+----
+fig = px.pie(df, values=x, names=labels,title='Pie chart')
+fig.show()
+----
+
+
++*Out[31]:*+
+----
+
+
+[[7fb86186-ae38-4619-934d-0641cee53b97]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== What is the ratio b/w restaurants that provide and do not provide
+table booking ?
+
+
++*In[32]:*+
+[source, ipython3]
+----
+x=df['book_table'].value_counts()
+labels=['not book','book']
+plt.pie(x,explode=[0.0,0.1],autopct='%1.1f%%')
+----
+
+
++*Out[32]:*+
+----([<matplotlib.patches.Wedge at 0x5b05599108>,
+  <matplotlib.patches.Wedge at 0x5b04b66ac8>],
+ [Text(-0.9856961240827233, 0.4882654513359477, ''),
+  Text(1.0753048626356982, -0.5326532196392153, '')],
+ [Text(-0.537652431317849, 0.26632660981960776, '85.4%'),
+  Text(0.6272611698708239, -0.31071437812287556, '14.6%')])
+![png](output_44_1.png)
+----
+
+===== using plotly, #### What is the ratio b/w restaurants that provide
+and do not provide table booking ?
+
+
++*In[33]:*+
+[source, ipython3]
+----
+import plotly.graph_objs as go
+from plotly.offline import iplot
+----
+
+
++*In[34]:*+
+[source, ipython3]
+----
+x=df['book_table'].value_counts()
+labels=['not book','book']
+----
+
+
++*In[35]:*+
+[source, ipython3]
+----
+trace=go.Pie(labels=labels, values=x,
+               hoverinfo='label+percent', textinfo='value', 
+               textfont=dict(size=25),
+              pull=[0, 0, 0,0.2, 0]
+               )
+----
+
+
++*In[36]:*+
+[source, ipython3]
+----
+iplot([trace])
+----
+
+
++*Out[36]:*+
+----
+[[29a8e1cc-8e1d-410e-8644-c1b5481c6d02]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== How many types of restaurants we have?
+
+
++*In[37]:*+
+[source, ipython3]
+----
+df['rest_type'].isna().sum()
+----
+
+
++*Out[37]:*+
+----151----
+
+
++*In[38]:*+
+[source, ipython3]
+----
+df['rest_type'].dropna(inplace=True)
+----
+
+
++*In[39]:*+
+[source, ipython3]
+----
+df['rest_type'].isna().sum()
+----
+
+
++*Out[39]:*+
+----0----
+
+
++*In[40]:*+
+[source, ipython3]
+----
+len(df['rest_type'].unique())
+----
+
+
++*Out[40]:*+
+----87----
+
+
++*In[41]:*+
+[source, ipython3]
+----
+plt.figure(figsize=(20,12))
+df['rest_type'].value_counts().nlargest(20).plot.bar(color='red')
+plt.gcf().autofmt_xdate()
+----
+
+
++*Out[41]:*+
+----
+![png](output_58_0.png)
+----
+
+===== now using plotly
+
+
++*In[42]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = df['rest_type'].value_counts().nlargest(20).index,
+        y = df['rest_type'].value_counts().nlargest(20),
+        name= 'rest_type')
+----
+
+
++*In[43]:*+
+[source, ipython3]
+----
+iplot([trace1])
+----
+
+
++*Out[43]:*+
+----
+[[0ef799af-1223-484c-bfbc-3085ba50bd0d]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== At all, Banglore is known as the tech capital of India,people
+having busy and modern life will prefer Quick Bites.
+
+===== We can observe tha Quick Bites type restaurants dominates.
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== highest voted restaurant
+
+
++*In[44]:*+
+[source, ipython3]
+----
+df.groupby('name')['votes'].max().nlargest(10).plot.bar()
+    
+----
+
+
++*Out[44]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b07918488>
+![png](output_66_1.png)
+----
+
+===== now using plotly to provide interactive graphs
+
+
++*In[45]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = df.groupby('name')['votes'].max().nlargest(10).index,
+        y = df.groupby('name')['votes'].max().nlargest(10),
+        name= 'name')
+----
+
+
++*In[46]:*+
+[source, ipython3]
+----
+iplot([trace1])
+----
+
+
++*Out[46]:*+
+----
+[[36413051-432c-4fdc-af44-417209cd16c0]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== total restaurants at different locations of Bengalore
+
+
++*In[47]:*+
+[source, ipython3]
+----
+df.groupby('location')['name'].unique()
+----
+
+
++*Out[47]:*+
+----location
+BTM                  [Sankranthi Veg Restaurant, Hearts Unlock Cafe...
+Banashankari         [Jalsa, Spice Elephant, San Churro Cafe, Addhu...
+Banaswadi            [Cafe Nibras, The Sanctuary, Crunch Pizzas, Pi...
+Bannerghatta Road    [Deja Vu Resto Bar, Fattoush, Empire Restauran...
+Basavanagudi         [Grand Village, Timepass Dinner, Srinathji's C...
+                                           ...                        
+West Bangalore       [FreshMenu, Fit Dish Fetish, Garden City Mobil...
+Whitefield           [Imperio Cafe, Night Diaries, LocalHost, AB's ...
+Wilson Garden        [Tree Top, Sahana's (Nati Style), Karavali Kol...
+Yelahanka            [Prashanth Naati Corner, Cheta's Kitchen, Twis...
+Yeshwantpur          [Chef's Bank, New Agarwal Bhavan, Fishing Boat...
+Name: name, Length: 92, dtype: object----
+
+
++*In[48]:*+
+[source, ipython3]
+----
+restaurant=[]
+location=[]
+for key,location_df in df.groupby('location'):
+    location.append(key)
+    restaurant.append(len(location_df['name'].unique()))
+
+----
+
+
++*In[49]:*+
+[source, ipython3]
+----
+df_total=pd.DataFrame(zip(location,restaurant))
+df_total.columns=['location','restaurant']
+df_total.set_index('location',inplace=True)
+df_total.sort_values(by='restaurant').tail(10)
+----
+
+
++*Out[49]:*+
+----
+restaurant
+
+location
+
+Bellandur
+
+284
+
+Jayanagar
+
+311
+
+Bannerghatta Road
+
+362
+
+JP Nagar
+
+400
+
+Indiranagar
+
+467
+
+Electronic City
+
+518
+
+Marathahalli
+
+525
+
+HSR
+
+553
+
+BTM
+
+581
+
+Whitefield
+
+634
+----
+
+
++*In[50]:*+
+[source, ipython3]
+----
+df_total.sort_values(by='restaurant').tail(10).plot.bar()
+
+----
+
+
++*Out[50]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b077ce6c8>
+![png](output_75_1.png)
+----
+
+
++*In[51]:*+
+[source, ipython3]
+----
+df_total.sort_values(by='restaurant').tail(10).index
+----
+
+
++*Out[51]:*+
+----Index(['Bellandur', 'Jayanagar', 'Bannerghatta Road', 'JP Nagar',
+       'Indiranagar', 'Electronic City', 'Marathahalli', 'HSR', 'BTM',
+       'Whitefield'],
+      dtype='object', name='location')----
+
+
++*In[52]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = df_total['restaurant'].nlargest(10).index,
+        y = df_total['restaurant'].nlargest(10),
+        name= 'Priority')
+----
+
+
++*In[53]:*+
+[source, ipython3]
+----
+iplot([trace1])
+----
+
+
++*Out[53]:*+
+----
+[[60d0bd7b-ea74-47ba-9211-b1f1b334218d]]
+----
+
+
++*In[54]:*+
+[source, ipython3]
+----
+df.isnull().sum()
+----
+
+
++*Out[54]:*+
+----url                                0
+address                            0
+name                               0
+online_order                       0
+book_table                         0
+rate                               0
+votes                              0
+phone                            832
+location                           0
+rest_type                        151
+dish_liked                     20333
+cuisines                          11
+approx_cost(for two people)      252
+reviews_list                       0
+menu_item                          0
+listed_in(type)                    0
+listed_in(city)                    0
+dtype: int64----
+
+=== different type of restaurants
+
+
++*In[55]:*+
+[source, ipython3]
+----
+#data is represented in form of percentage 
+(df['rest_type'].value_counts()/len(df))*100
+----
+
+
++*Out[55]:*+
+----Quick Bites                  34.302035
+Casual Dining                22.582040
+Cafe                          8.026489
+Dessert Parlor                4.412635
+Delivery                      4.075827
+                               ...    
+Cafe, Food Court              0.004551
+Bakery, Beverage Shop         0.004551
+Food Court, Beverage Shop     0.004551
+Bakery, Food Court            0.004551
+Quick Bites, Kiosk            0.002276
+Name: rest_type, Length: 87, dtype: float64----
+
+=== Total number of variety of restaurants ie north indian,south Indian
+
+
++*In[56]:*+
+[source, ipython3]
+----
+
+cuisines=df['cuisines'].value_counts()[:10]
+sns.barplot(cuisines,cuisines.index)
+plt.xlabel('Count')
+plt.title("Most popular cuisines of Bangalore")
+----
+
+
++*Out[56]:*+
+----Text(0.5, 1.0, 'Most popular cuisines of Bangalore')
+![png](output_83_1.png)
+----
+
+
++*In[57]:*+
+[source, ipython3]
+----
+cuisines=df['cuisines'].value_counts()[:10]
+trace1 = go.Bar( 
+        x = cuisines.index,
+        y = cuisines,
+        name= 'Cuisines')
+----
+
+
++*In[58]:*+
+[source, ipython3]
+----
+iplot([trace1])
+----
+
+
++*Out[58]:*+
+----
+[[41c134aa-a34c-4ea0-8fb0-c0e3e2e41532]]
+----
+
+=== We can observe that North Indian,chinese,South Indian and Biriyani
+are most common.
+
+=== It means Bengalore is more influenced by North Indian culture more
+than South
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Analyse Approx cost for 2 people
+
+
++*In[59]:*+
+[source, ipython3]
+----
+len(df['approx_cost(for two people)'].value_counts())
+----
+
+
++*Out[59]:*+
+----66----
+
+
++*In[60]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'].isna().sum()
+----
+
+
++*Out[60]:*+
+----252----
+
+
++*In[61]:*+
+[source, ipython3]
+----
+df.dropna(axis='index',subset=['approx_cost(for two people)'],inplace=True)
+----
+
+
++*In[62]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'].isna().sum()
+----
+
+
++*Out[62]:*+
+----0----
+
+
++*In[63]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'].unique()
+----
+
+
++*Out[63]:*+
+----array(['800', '300', '600', '700', '550', '500', '450', '650', '400',
+       '900', '200', '750', '150', '850', '100', '1,200', '350', '250',
+       '950', '1,000', '1,500', '1,300', '199', '80', '1,100', '160',
+       '1,600', '230', '130', '1,700', '1,400', '1,350', '2,200', '2,000',
+       '1,800', '1,900', '180', '330', '2,500', '2,100', '3,000', '2,800',
+       '3,400', '50', '40', '1,250', '3,500', '4,000', '2,400', '2,600',
+       '1,450', '70', '3,200', '560', '240', '360', '6,000', '1,050',
+       '2,300', '4,100', '120', '5,000', '3,700', '1,650', '2,700',
+       '4,500'], dtype=object)----
+
+
++*In[64]:*+
+[source, ipython3]
+----
+def is_float(x):
+    try:
+        float(x)
+    except:
+        return False
+    return True
+----
+
+
++*In[65]:*+
+[source, ipython3]
+----
+df[~df['approx_cost(for two people)'].apply(is_float)]
+----
+
+
++*Out[65]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|67 |https://www.zomato.com/gustoesbeerhouse?contex... |10, 30th Main,
+Deve Gowda Petrol Bunk Road, 3r... |Gustoes Beer House |No |No |4.1 |868
+|080 49653521 |Banashankari |Pub |Beer, Wedges, Pizza, Nachos, Salads,
+Papaya Sa... |Continental, Italian, Mexican, North Indian, C... |1,200
+|[('Rated 5.0', 'RATED\n Has a really calm roo... |[] |Delivery
+|Banashankari
+
+|119 |https://www.zomato.com/bangalore/k27-the-pub-b... |27, 27th Cross,
+2nd Stage, Banashankari, Banga... |K27 - The Pub |No |No |3.1 |30 |+91
+9980097472 |Banashankari |Bar |NaN |Chinese, North Indian |1,000
+|[('Rated 4.0', "RATED\n Convenient and Averag... |[] |Delivery
+|Banashankari
+
+|166 |https://www.zomato.com/bangalore/patio-805-jay... |805, Ground
+Floor, 35C Cross, 9th Main, 4th Bl... |Patio 805 |Yes |Yes |4.1 |364
+|+91 8884999805 |Jayanagar |Casual Dining |Noodles, Laksa Soup, Coffee,
+Veg Fritters, Veg... |Thai, Vietnamese, Asian, Chinese |1,200 |[('Rated
+4.0', "RATED\n The number of good re... |[] |Delivery |Banashankari
+
+|207 |https://www.zomato.com/bangalore/chutney-chang... |Cosmopolitan
+Club, 22nd Cross, 3rd Block, Jaya... |Chutney Chang |Yes |Yes |4.1 |2339
+|080 22443007\r\n+91 9901967373 |Jayanagar |Casual Dining |Veg Momos,
+Brownie Chocolate, Palak Chaat, Mut... |North Indian, Chinese, BBQ
+|1,500 |[('Rated 4.0', 'RATED\n Great place for team ... |[] |Delivery
+|Banashankari
+
+|217 |https://www.zomato.com/bangalore/toscano-jayan... |359/38,Next to
+Fabindia, 7th Cross, 1st Block,... |Toscano |Yes |Yes |4.3 |1129 |080
+41558423\r\n+91 7619320074 |Jayanagar |Casual Dining |Pizza, Pasta,
+Salads, Calamari, Ravioli, Pumpk... |Italian, Salad |1,300 |[('Rated
+4.0', 'RATED\n Saturday Night Dinner... |[] |Delivery |Banashankari
+
+|... |... |... |... |... |... |... |... |... |... |... |... |... |...
+|... |... |... |...
+
+|51707 |https://www.zomato.com/bangalore/m-bar-bengalu... |Bengaluru
+Marriott Hotel, 75, 8th Road, EPIP A... |M Bar - Bengaluru Marriott
+Hotel Whitefield |No |No |3.9 |77 |080 49435000 |Whitefield |Fine
+Dining, Bar |Rooftop Ambience |Finger Food |2,000 |[('Rated 4.0',
+'RATED\n Went there post dinne... |[] |Pubs and bars |Whitefield
+
+|51708 |https://www.zomato.com/bangalore/keys-cafe-key... |Keys Hotel,
+6, 1st Phase Industrial Area, Near... |Keys Cafe - Keys Hotel |No |No
+|2.8 |161 |080 39451000\n+91 8884038484 |Whitefield |Casual Dining, Bar
+|Salads, Coffee, Breakfast Buffet, Halwa, Chick... |Chinese,
+Continental, North Indian |1,200 |[('Rated 3.0', 'RATED\n Place is good
+not tha... |[] |Pubs and bars |Whitefield
+
+|51712 |https://www.zomato.com/bangalore/best-brews-fo... |Four Points
+by Sheraton Bengaluru, 43/3, White... |Best Brews - Four Points by
+Sheraton Bengaluru... |No |No |3.6 |27 |080 40301477 |Whitefield |Bar
+|NaN |Continental |1,500 |[('Rated 5.0', "RATED\n Food and service are
+... |[] |Pubs and bars |Whitefield
+
+|51715 |https://www.zomato.com/bangalore/chime-sherato... |Sheraton
+Grand Bengaluru Whitefield Hotel & Co... |Chime - Sheraton Grand
+Bengaluru Whitefield Ho... |No |Yes |4.3 |236 |080 49652769 |ITPL Main
+Road, Whitefield |Bar |Cocktails, Pizza, Buttermilk |Finger Food |2,500
+|[('Rated 4.0', 'RATED\n Nice and friendly pla... |[] |Pubs and bars
+|Whitefield
+
+|51716 |https://www.zomato.com/bangalore/the-nest-the-... |ITPL Main
+Road, KIADB Export Promotion Industr... |The Nest - The Den Bengaluru
+|No |No |3.4 |13 |+91 8071117272 |ITPL Main Road, Whitefield |Bar,
+Casual Dining |NaN |Finger Food, North Indian, Continental |1,500
+|[('Rated 5.0', 'RATED\n Great ambience , look... |[] |Pubs and bars
+|Whitefield
+|=======================================================================
+
+6798 rows × 17 columns
+----
+
+
++*In[66]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'].dtype
+----
+
+
++*Out[66]:*+
+----dtype('O')----
+
+
++*In[67]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)']
+----
+
+
++*Out[67]:*+
+----0          800
+1          800
+2          800
+3          300
+4          600
+         ...  
+51709      800
+51711      800
+51712    1,500
+51715    2,500
+51716    1,500
+Name: approx_cost(for two people), Length: 43690, dtype: object----
+
+
++*In[68]:*+
+[source, ipython3]
+----
+type(df['approx_cost(for two people)'][0])
+----
+
+
++*Out[68]:*+
+----str----
+
+==== remove ,
+
+
++*In[69]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'] = df['approx_cost(for two people)'].apply(lambda x: x.replace(',',''))
+----
+
+
++*In[70]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)']=df['approx_cost(for two people)'].astype(int)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== cost vs rating
+
+
++*In[71]:*+
+[source, ipython3]
+----
+plt.figure(figsize=(10,7))
+sns.scatterplot(x="rate",y='approx_cost(for two people)',hue='online_order',data=df)
+plt.show()
+----
+
+
++*Out[71]:*+
+----
+![png](output_104_0.png)
+----
+
+===== from this scattterplot,we can come up with a conclusion ya most of
+the highest rated accepts online order and they r budgeted too
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[73]:*+
+[source, ipython3]
+----
+df.head()
+----
+
+
++*Out[73]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8 |918
+|+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros, Cannelloni,
+Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800 |[('Rated
+3.0', "RATED\n Ambience is not that ... |[] |Buffet |Banashankari
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa |South
+Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8 |166 |+91
+8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining |Panipuri, Gol
+Gappe |North Indian, Rajasthani |600 |[('Rated 4.0', 'RATED\n Very good
+restaurant ... |[] |Buffet |Banashankari
+|=======================================================================
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Is there any difference b/w votes of restaurants accepting and not
+accepting online orders?
+
+
++*In[74]:*+
+[source, ipython3]
+----
+sns.boxplot(x='online_order',y='votes',data=df)
+----
+
+
++*Out[74]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b073e7e48>
+![png](output_110_1.png)
+----
+
+==== from this boxplot,we can observe that median number of votes for
+both categories vary.
+
+==== Restaurants accepting online orders get more votes from customers
+as there is a rating option poping up after each order through zomato
+application.
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== Is there any difference b/w price of restaurants accepting and not
+accepting online orders?
+
+
++*In[75]:*+
+[source, ipython3]
+----
+sns.boxplot(x='online_order',y='approx_cost(for two people)',data=df)
+----
+
+
++*Out[75]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b051643c8>
+![png](output_115_1.png)
+----
+
+
++*In[76]:*+
+[source, ipython3]
+----
+fig = px.box(df,x='online_order',y='approx_cost(for two people)')
+fig.show()
+----
+
+
++*Out[76]:*+
+----
+[[bccc0657-e97d-4b8f-a601-0e1d5c847b13]]
+----
+
+==== Restaurants accepting online orders are more affordable than
+Restaurants who are accepting online orders
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Cheapest Rate for 2 people
+
+
++*In[77]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'].min()
+----
+
+
++*Out[77]:*+
+----40----
+
+=== Most costly for 2 people
+
+
++*In[78]:*+
+[source, ipython3]
+----
+df['approx_cost(for two people)'].max()
+----
+
+
++*Out[78]:*+
+----6000----
+
+
++*In[79]:*+
+[source, ipython3]
+----
+df[df['approx_cost(for two people)']==6000]
+----
+
+
++*Out[79]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|19139 |https://www.zomato.com/bangalore/le-cirque-sig... |The Leela
+Palace, 23, Old Airport Road, Bangalore |Le Cirque Signature - The Leela
+Palace |No |Yes |4.3 |126 |080 30571234\r\n080 30571540 |Old Airport
+Road |Fine Dining |Wine, Asparagus Soup, Creme Brulee, Pasta, Rav...
+|French, Italian |6000 |[('Rated 5.0', 'RATED\n Awesome would be an u...
+|[] |Dine-out |Indiranagar
+
+|45618 |https://www.zomato.com/bangalore/le-cirque-sig... |The Leela
+Palace, 23, Old Airport Road, Bangalore |Le Cirque Signature - The Leela
+Palace |No |Yes |4.3 |128 |080 30571234\n080 30571540 |Old Airport Road
+|Fine Dining |Wine, Asparagus Soup, Creme Brulee, Pasta, Rav... |French,
+Italian |6000 |[('Rated 5.0', 'RATED\n Awesome would be an u... |[]
+|Dine-out |Old Airport Road
+|=======================================================================
+----
+
+
++*In[80]:*+
+[source, ipython3]
+----
+df[df['approx_cost(for two people)']==6000]['name']
+----
+
+
++*Out[80]:*+
+----19139    Le Cirque Signature - The Leela Palace
+45618    Le Cirque Signature - The Leela Palace
+Name: name, dtype: object----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== distribution of cost for 2 people
+
+
++*In[81]:*+
+[source, ipython3]
+----
+plt.figure(figsize=(6,6))
+sns.distplot(df['approx_cost(for two people)'])
+plt.show()
+----
+
+
++*Out[81]:*+
+----
+![png](output_128_0.png)
+----
+
+
++*In[82]:*+
+[source, ipython3]
+----
+px.histogram(df, x="approx_cost(for two people)")
+----
+
+
++*Out[82]:*+
+----
+[[b4b813b8-8323-4721-8448-e743a1fe7568]]
+----
+
+===== most of the price lies between in a range of under 1000,it means
+most are affordable & very few are luxurious
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Most costly Rate for 2 people is served at which Restaurant what
+exactly is the dish involved in this and liked dish of that restaurant
+
+
++*In[83]:*+
+[source, ipython3]
+----
+df[df['approx_cost(for two people)']==6000].loc[:,('name','cuisines','dish_liked')]
+----
+
+
++*Out[83]:*+
+----
+[cols=",,,",options="header",]
+|=======================================================================
+| |name |cuisines |dish_liked
+|19139 |Le Cirque Signature - The Leela Palace |French, Italian |Wine,
+Asparagus Soup, Creme Brulee, Pasta, Rav...
+
+|45618 |Le Cirque Signature - The Leela Palace |French, Italian |Wine,
+Asparagus Soup, Creme Brulee, Pasta, Rav...
+|=======================================================================
+----
+
+
++*In[84]:*+
+[source, ipython3]
+----
+df[df['approx_cost(for two people)']==6000][['name','cuisines','dish_liked']]
+----
+
+
++*Out[84]:*+
+----
+[cols=",,,",options="header",]
+|=======================================================================
+| |name |cuisines |dish_liked
+|19139 |Le Cirque Signature - The Leela Palace |French, Italian |Wine,
+Asparagus Soup, Creme Brulee, Pasta, Rav...
+
+|45618 |Le Cirque Signature - The Leela Palace |French, Italian |Wine,
+Asparagus Soup, Creme Brulee, Pasta, Rav...
+|=======================================================================
+----
+
+
++*In[85]:*+
+[source, ipython3]
+----
+data=df.copy()
+----
+
+
++*In[86]:*+
+[source, ipython3]
+----
+data.dtypes
+----
+
+
++*Out[86]:*+
+----url                             object
+address                         object
+name                            object
+online_order                    object
+book_table                      object
+rate                           float64
+votes                            int64
+phone                           object
+location                        object
+rest_type                       object
+dish_liked                      object
+cuisines                        object
+approx_cost(for two people)      int32
+reviews_list                    object
+menu_item                       object
+listed_in(type)                 object
+listed_in(city)                 object
+dtype: object----
+
+
++*In[87]:*+
+[source, ipython3]
+----
+data.set_index('name',inplace=True)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Top 10 Most Expensive restaurant with approx cost for 2 people
+
+
++*In[88]:*+
+[source, ipython3]
+----
+data['approx_cost(for two people)'].nlargest(10).plot.bar()
+----
+
+
++*Out[88]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b0507c208>
+![png](output_140_1.png)
+----
+
+
++*In[89]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = data['approx_cost(for two people)'].nlargest(10).index,
+        y = data['approx_cost(for two people)'].nlargest(10),
+        name= 'Priority')
+iplot([trace1])
+----
+
+
++*Out[89]:*+
+----
+[[f08bb1fb-c04d-49c9-8696-978f959d237b]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Top 10 Cheapest restaurant with approx cost for 2 people
+
+
++*In[90]:*+
+[source, ipython3]
+----
+data['approx_cost(for two people)'].nsmallest(10).plot.bar()
+----
+
+
++*Out[90]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b0527e048>
+![png](output_144_1.png)
+----
+
+
++*In[91]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = data['approx_cost(for two people)'].nsmallest(10).index,
+        y = data['approx_cost(for two people)'].nsmallest(10),
+        name= 'Priority')
+iplot([trace1])
+----
+
+
++*Out[91]:*+
+----
+[[e8fb300c-ef6b-442c-bb89-0a27781b6c2d]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Top 10 Cheapest restaurant location wise with approx cost for 2
+people
+
+
++*In[92]:*+
+[source, ipython3]
+----
+data.set_index('location',inplace=True)
+data['approx_cost(for two people)'].nsmallest(10)
+----
+
+
++*Out[92]:*+
+----location
+Indiranagar         40
+Indiranagar         40
+Indiranagar         40
+Old Airport Road    40
+Indiranagar         40
+Domlur              40
+Domlur              40
+Old Airport Road    40
+Shivajinagar        50
+Shivajinagar        50
+Name: approx_cost(for two people), dtype: int32----
+
+=== all the restautant that are below than 500(budget hotel)
+
+
++*In[93]:*+
+[source, ipython3]
+----
+data[data['approx_cost(for two people)']<=500]
+----
+
+
++*Out[93]:*+
+----
+url
+
+address
+
+online_order
+
+book_table
+
+rate
+
+votes
+
+phone
+
+rest_type
+
+dish_liked
+
+cuisines
+
+approx_cost(for two people)
+
+reviews_list
+
+menu_item
+
+listed_in(type)
+
+listed_in(city)
+
+location
+
+Banashankari
+
+https://www.zomato.com/bangalore/addhuri-udupi...
+
+1st Floor, Annakuteera, 3rd Stage, Banashankar...
+
+No
+
+No
+
+3.7
+
+88
+
++91 9620009302
+
+Quick Bites
+
+Masala Dosa
+
+South Indian, North Indian
+
+300
+
+[('Rated 4.0', "RATED\n Great food and proper...
+
+{empty}[]
+
+Buffet
+
+Banashankari
+
+Banashankari
+
+https://www.zomato.com/bangalore/caf%C3%A9-dow...
+
+12,29 Near PES University Back Gate, D'Souza N...
+
+Yes
+
+No
+
+4.1
+
+402
+
+080 26724489\r\n+91 7406048982
+
+Cafe
+
+Waffles, Pasta, Crispy Chicken, Honey Chilli C...
+
+Cafe
+
+500
+
+[('Rated 4.0', 'RATED\n We ended up here on a...
+
+{empty}[]
+
+Cafes
+
+Banashankari
+
+Banashankari
+
+https://www.zomato.com/bangalore/the-coffee-sh...
+
+6th Block, 3rd Stage, Banashankari, Bangalore
+
+Yes
+
+Yes
+
+4.2
+
+164
+
++91 9731644212
+
+Cafe
+
+Coffee, Spaghetti, Pancakes, Nachos, Pasta, Sa...
+
+Cafe, Chinese, Continental, Italian
+
+500
+
+[('Rated 4.0', "RATED\n Food - 4/5\nAmbience ...
+
+{empty}[]
+
+Cafes
+
+Banashankari
+
+Banashankari
+
+https://www.zomato.com/bangalore/caf-eleven-ba...
+
+111, Sapphire Toys Building, 100 Feet Ring Roa...
+
+No
+
+No
+
+4.0
+
+424
+
+080 49577715
+
+Cafe
+
+Sandwich, Omelette, Ice Tea, Virgin Mojito, Ho...
+
+Cafe, Continental
+
+450
+
+[('Rated 2.0', "RATED\n This is a hookah cafe...
+
+{empty}[]
+
+Cafes
+
+Banashankari
+
+Banashankari
+
+https://www.zomato.com/bangalore/t3h-cafe-bana...
+
+504, CJ Venkata Das Road, Padmanabhangar, 2nd ...
+
+No
+
+No
+
+3.9
+
+93
+
++91 8884726600
+
+Cafe
+
+Cheese Maggi, Peri Peri Fries, Pasta Arrabiata
+
+Cafe, Italian, American
+
+300
+
+[('Rated 4.0', "RATED\n Happy to see such a c...
+
+{empty}[]
+
+Cafes
+
+Banashankari
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+Brookefield
+
+https://www.zomato.com/bangalore/venice-kerala...
+
+Opposite Brookfield Mall, Shiva Temple Road, B...
+
+No
+
+No
+
+3.7
+
+34
+
++91 8880059495
+
+Quick Bites
+
+NaN
+
+Kerala
+
+200
+
+[('Rated 5.0', 'RATED\n Loved this restaurant...
+
+{empty}[]
+
+Dine-out
+
+Whitefield
+
+KR Puram
+
+https://www.zomato.com/bangalore/thai-chinese-...
+
+7, Anurhh Arcade, Hoodi Road, Kodigehalli Road...
+
+No
+
+No
+
+3.4
+
+7
+
++91 9206260085\n+91 7619416923
+
+Quick Bites
+
+NaN
+
+Chinese, Thai
+
+400
+
+[('Rated 5.0', 'RATED\n Its Looking delicious...
+
+{empty}[]
+
+Dine-out
+
+Whitefield
+
+Brookefield
+
+https://www.zomato.com/bangalore/the-crunch-br...
+
+33/1, Kundalahalli Road, Brookefield, Bangalore
+
+No
+
+No
+
+3.3
+
+6
+
++91 9016277963
+
+Beverage Shop
+
+NaN
+
+Beverages
+
+300
+
+[('Rated 3.0', 'RATED\n the sandwich was not ...
+
+{empty}[]
+
+Dine-out
+
+Whitefield
+
+KR Puram
+
+https://www.zomato.com/bangalore/punjabi-charc...
+
+7, Anurhh Arcade, Hoodi Road, Kodigehalli Road...
+
+No
+
+No
+
+3.6
+
+31
+
++91 9341341916\n+91 7619416499
+
+Quick Bites
+
+NaN
+
+North Indian, Chinese
+
+400
+
+[('Rated 3.0', 'RATED\n A nice little place f...
+
+{empty}[]
+
+Dine-out
+
+Whitefield
+
+Brookefield
+
+https://www.zomato.com/bangalore/raapchick-bro...
+
+Opposite Brookefield Mall, Kundanhalli, Brooke...
+
+Yes
+
+No
+
+3.6
+
+49
+
+080 41717785\n+91 9571153004
+
+Quick Bites
+
+Burgers
+
+Fast Food, Burger
+
+300
+
+[('Rated 5.0', "RATED\n I was randomly lookin...
+
+['Chicken Wrap', 'Veg Crunch Burger', 'Spicy P...
+
+Dine-out
+
+Whitefield
+
+26330 rows × 15 columns
+----
+
+
++*In[94]:*+
+[source, ipython3]
+----
+df_budget=data[data['approx_cost(for two people)']<=500].loc[:,('approx_cost(for two people)')]
+df_budget=df_budget.reset_index()
+df_budget.head()
+----
+
+
++*Out[94]:*+
+----
+[cols=",,",options="header",]
+|=======================================
+| |location |approx_cost(for two people)
+|0 |Banashankari |300
+|1 |Banashankari |500
+|2 |Banashankari |500
+|3 |Banashankari |450
+|4 |Banashankari |300
+|=======================================
+----
+
+
++*In[95]:*+
+[source, ipython3]
+----
+df_budget['approx_cost(for two people)'].value_counts().plot.bar()
+----
+
+
++*Out[95]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b08ef21c8>
+![png](output_152_1.png)
+----
+
+=== we can conclude that 300 and 400 cost dishes are maximum in count
+
+
++*In[96]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = df_budget['approx_cost(for two people)'].value_counts().index,
+        y = df_budget['approx_cost(for two people)'].value_counts(),
+        name= 'Priority')
+iplot([trace1])
+----
+
+
++*Out[96]:*+
+----
+[[4ff28658-033a-47b9-8d3b-b5d4a06450fe]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Restaurants that have better rating >4 and that are under budget too
+
+
++*In[97]:*+
+[source, ipython3]
+----
+df[(df['rate']>=4) & (df['approx_cost(for two people)']<=500)].shape
+
+----
+
+
++*Out[97]:*+
+----(4007, 17)----
+
+=== Total no. of Restaurants that have better rating >4 and that are
+under budget too ie less than 500
+
+
++*In[98]:*+
+[source, ipython3]
+----
+df_new=df[(df['rate']>=4) & (df['approx_cost(for two people)']<=500)]
+len(df_new['name'].unique())
+----
+
+
++*Out[98]:*+
+----628----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Total such various affordable hotels at different location
+
+
++*In[99]:*+
+[source, ipython3]
+----
+location=[]
+total=[]
+for loc,location_df in df_new.groupby('location'):
+    location.append(loc)
+    total.append(len(location_df['name'].unique()))
+    
+    
+----
+
+
++*In[100]:*+
+[source, ipython3]
+----
+len(location)
+----
+
+
++*Out[100]:*+
+----68----
+
+
++*In[101]:*+
+[source, ipython3]
+----
+len(total)
+----
+
+
++*Out[101]:*+
+----68----
+
+
++*In[102]:*+
+[source, ipython3]
+----
+location_df=pd.DataFrame(zip(location,total))
+location_df.columns=['location','restaurant']
+location_df.set_index('location',inplace=True)
+
+----
+
+
++*In[103]:*+
+[source, ipython3]
+----
+location_df.head(20)
+----
+
+
++*Out[103]:*+
+----
+restaurant
+
+location
+
+BTM
+
+54
+
+Banashankari
+
+25
+
+Banaswadi
+
+3
+
+Bannerghatta Road
+
+19
+
+Basavanagudi
+
+31
+
+Basaveshwara Nagar
+
+3
+
+Bellandur
+
+20
+
+Brigade Road
+
+11
+
+Brookefield
+
+16
+
+Church Street
+
+8
+
+City Market
+
+1
+
+Commercial Street
+
+4
+
+Cunningham Road
+
+4
+
+Domlur
+
+5
+
+Ejipura
+
+1
+
+Electronic City
+
+23
+
+Frazer Town
+
+15
+
+HBR Layout
+
+3
+
+HSR
+
+58
+
+Hebbal
+
+1
+----
+
+
++*In[104]:*+
+[source, ipython3]
+----
+type(location)
+----
+
+
++*Out[104]:*+
+----list----
+
+
++*In[105]:*+
+[source, ipython3]
+----
+
+location_df['restaurant'].nlargest(10).plot.bar()
+plt.gcf().autofmt_xdate()
+plt.ylabel('Total restaurants')
+----
+
+
++*Out[105]:*+
+----Text(0, 0.5, 'Total restaurants')
+![png](output_168_1.png)
+----
+
+
++*In[106]:*+
+[source, ipython3]
+----
+trace1 = go.Bar( 
+        x = location_df['restaurant'].nlargest(10).index,
+        y = location_df['restaurant'].nlargest(10),
+        name= 'Priority')
+iplot([trace1])
+----
+
+
++*Out[106]:*+
+----
+[[2a45afad-3b5d-407e-9bd0-7672bb7a6435]]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+= To Visualise what are the names of those hotels
+
+
++*In[107]:*+
+[source, ipython3]
+----
+location=[]
+total=[]
+for loc,location_df in df_new.groupby('location'):
+    location.append(loc)
+    total.append(location_df['name'].unique())
+    
+----
+
+
++*In[108]:*+
+[source, ipython3]
+----
+afford=pd.DataFrame(zip(location,total))
+afford.columns=['location','res_names']
+afford.set_index('location',inplace=True)
+afford.head()
+----
+
+
++*Out[108]:*+
+----
+res_names
+
+location
+
+BTM
+
+[eat.fit, Hiyar Majhe Kolkata, XO Belgian Waff...
+
+Banashankari
+
+[CafÃƒÂƒÃ‚ÂƒÃƒÂ‚Ã‚ÂƒÃƒÂƒÃ‚Â‚ÃƒÂ‚Ã‚Â© Down The ...
+
+Banaswadi
+
+[Pooja Dosa Camp, Corner House Ice Cream, The ...
+
+Bannerghatta Road
+
+[BOX8- Desi Meals, Krishna Kuteera, Krishna Ku...
+
+Basavanagudi
+
+[Kabab Magic, Sri Guru Kottureshwara Davangere...
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Finding Best budget Restaurants in any location
+
+====== we will pass location and restaurant type as parameteres,function
+will return name of restaurants.
+
+
++*In[109]:*+
+[source, ipython3]
+----
+def return_budget(location,restaurant):
+    budget=df[(df['approx_cost(for two people)']<=400) & (df['location']==location) & 
+                     (df['rate']>4) & (df['rest_type']==restaurant)]
+    return(budget['name'].unique())
+----
+
+
++*In[110]:*+
+[source, ipython3]
+----
+return_budget('BTM',"Quick Bites")
+----
+
+
++*Out[110]:*+
+----array(['Swadista Aahar', 'Litti Twist', 'The Shawarma Shop', 'Gorbandh',
+       'Yum In My Tum', 'Chaatimes', "Muthashy's", 'Swad Punjab Da',
+       "Domino's Pizza", 'Roti Wala', 'Andhra Kitchen'], dtype=object)----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Which are the foodie areas?
+
+
++*In[111]:*+
+[source, ipython3]
+----
+plt.figure(figsize=(10,7))
+Restaurant_locations=df['location'].value_counts()[:20]
+sns.barplot(Restaurant_locations,Restaurant_locations.index)
+----
+
+
++*Out[111]:*+
+----<matplotlib.axes._subplots.AxesSubplot at 0x5b08d89c48>
+![png](output_182_1.png)
+----
+
+
++*In[112]:*+
+[source, ipython3]
+----
+Restaurant_locations=df['location'].value_counts()[:20]
+trace1 = go.Bar( 
+        x = Restaurant_locations.index,
+        y = Restaurant_locations,
+        name= 'Priority')
+iplot([trace1])
+----
+
+
++*Out[112]:*+
+----
+[[59fc499a-bbd1-4abb-8991-c65f4d06a16b]]
+----
+
+==== We can see that BTM,HSR and Koranmangala 5th block has the most
+number of restaurants.
+
+==== BTM dominates the section by having more than 5000 restaurants.
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== geographical analysis
+
+==== I need Latitudes & longitudes for each of the place for
+geaographical Data analysis,so to fetch lat,lon of each place,use Geopy
+
+
++*In[120]:*+
+[source, ipython3]
+----
+df.shape
+----
+
+
++*Out[120]:*+
+----(43690, 17)----
+
+
++*In[121]:*+
+[source, ipython3]
+----
+len(df['location'].unique())
+----
+
+
++*Out[121]:*+
+----92----
+
+
++*In[122]:*+
+[source, ipython3]
+----
+locations=pd.DataFrame({"Name":df['location'].unique()})
+----
+
+
++*In[123]:*+
+[source, ipython3]
+----
+locations['new_Name']='Bangalore '+locations['Name']
+----
+
+
++*In[124]:*+
+[source, ipython3]
+----
+locations.head()
+----
+
+
++*Out[124]:*+
+----
+[cols=",,",options="header",]
+|===================================================
+| |Name |new_Name
+|0 |Banashankari |Bangalore Banashankari
+|1 |Basavanagudi |Bangalore Basavanagudi
+|2 |Mysore Road |Bangalore Mysore Road
+|3 |Jayanagar |Bangalore Jayanagar
+|4 |Kumaraswamy Layout |Bangalore Kumaraswamy Layout
+|===================================================
+----
+
+
++*In[125]:*+
+[source, ipython3]
+----
+!pip install geopy
+----
+
+
++*Out[125]:*+
+----
+Requirement already satisfied: geopy in c:\users\mcr\anaconda3\lib\site-packages (2.0.0)
+Requirement already satisfied: geographiclib<2,>=1.49 in c:\users\mcr\anaconda3\lib\site-packages (from geopy) (1.50)
+----
+
+
++*In[126]:*+
+[source, ipython3]
+----
+from geopy.geocoders import Nominatim
+----
+
+
++*In[127]:*+
+[source, ipython3]
+----
+lat_lon=[]
+geolocator=Nominatim(user_agent="app")
+for location in locations['Name']:
+    location = geolocator.geocode(location)
+    if location is None:
+        lat_lon.append(np.nan)
+    else:    
+        geo=(location.latitude,location.longitude)
+        lat_lon.append(geo)
+----
+
+
++*In[128]:*+
+[source, ipython3]
+----
+locations['geo_loc']=lat_lon
+----
+
+
++*In[129]:*+
+[source, ipython3]
+----
+locations.head()
+----
+
+
++*Out[129]:*+
+----
+[cols=",,,",options="header",]
+|=======================================================================
+| |Name |new_Name |geo_loc
+|0 |Banashankari |Bangalore Banashankari |(15.8876779, 75.7046777)
+
+|1 |Basavanagudi |Bangalore Basavanagudi |(13.8345913, 75.7339359)
+
+|2 |Mysore Road |Bangalore Mysore Road |(51.4629324, -0.1601502)
+
+|3 |Jayanagar |Bangalore Jayanagar |(27.64392675, 83.05280519687284)
+
+|4 |Kumaraswamy Layout |Bangalore Kumaraswamy Layout |(12.9081487,
+77.5553179)
+|=======================================================================
+----
+
+
++*In[130]:*+
+[source, ipython3]
+----
+locations.to_csv('zomato_locations.csv',index=False)
+----
+
+===== We have found out latitude and longitude of each location listed
+in the dataset using geopy.
+
+===== This is used to plot maps.
+
+
++*In[131]:*+
+[source, ipython3]
+----
+Rest_locations=pd.DataFrame(df['location'].value_counts().reset_index())
+----
+
+
++*In[132]:*+
+[source, ipython3]
+----
+Rest_locations.columns=['Name','count']
+Rest_locations.head()
+----
+
+
++*Out[132]:*+
+----
+[cols=",,",options="header",]
+|==============================
+| |Name |count
+|0 |BTM |4237
+|1 |Koramangala 5th Block |2358
+|2 |HSR |2113
+|3 |Indiranagar |1892
+|4 |JP Nagar |1849
+|==============================
+----
+
+===== now combine both the dataframes
+
+
++*In[133]:*+
+[source, ipython3]
+----
+locations.head()
+----
+
+
++*Out[133]:*+
+----
+[cols=",,,",options="header",]
+|=======================================================================
+| |Name |new_Name |geo_loc
+|0 |Banashankari |Bangalore Banashankari |(15.8876779, 75.7046777)
+
+|1 |Basavanagudi |Bangalore Basavanagudi |(13.8345913, 75.7339359)
+
+|2 |Mysore Road |Bangalore Mysore Road |(51.4629324, -0.1601502)
+
+|3 |Jayanagar |Bangalore Jayanagar |(27.64392675, 83.05280519687284)
+
+|4 |Kumaraswamy Layout |Bangalore Kumaraswamy Layout |(12.9081487,
+77.5553179)
+|=======================================================================
+----
+
+
++*In[134]:*+
+[source, ipython3]
+----
+locations.shape
+----
+
+
++*Out[134]:*+
+----(92, 3)----
+
+
++*In[135]:*+
+[source, ipython3]
+----
+Rest_locations.shape
+----
+
+
++*Out[135]:*+
+----(92, 2)----
+
+
++*In[136]:*+
+[source, ipython3]
+----
+Restaurant_locations=Rest_locations.merge(locations,on='Name',how="left").dropna()
+Restaurant_locations.head()
+----
+
+
++*Out[136]:*+
+----
+[cols=",,,,",options="header",]
+|=======================================================================
+| |Name |count |new_Name |geo_loc
+|0 |BTM |4237 |Bangalore BTM |(12.911275849999999, 77.60456543431182)
+
+|1 |Koramangala 5th Block |2358 |Bangalore Koramangala 5th Block
+|(13.2923988, 77.7519261)
+
+|2 |HSR |2113 |Bangalore HSR |(18.1475, 41.538889)
+
+|3 |Indiranagar |1892 |Bangalore Indiranagar |(12.9732913, 77.6404672)
+
+|4 |JP Nagar |1849 |Bangalore JP Nagar |(12.2655944, 76.6465404)
+|=======================================================================
+----
+
+
++*In[137]:*+
+[source, ipython3]
+----
+Restaurant_locations.shape
+----
+
+
++*Out[137]:*+
+----(91, 4)----
+
+
++*In[138]:*+
+[source, ipython3]
+----
+Restaurant_locations['count'].max()
+----
+
+
++*Out[138]:*+
+----4237----
+
+
++*In[139]:*+
+[source, ipython3]
+----
+type(Restaurant_locations['geo_loc'][0])
+----
+
+
++*Out[139]:*+
+----tuple----
+
+
++*In[140]:*+
+[source, ipython3]
+----
+def generateBaseMap(default_location=[12.97, 77.59], default_zoom_start=12):
+    base_map = folium.Map(location=default_location, zoom_start=default_zoom_start)
+    return base_map
+----
+
+
++*In[141]:*+
+[source, ipython3]
+----
+len(Restaurant_locations['geo_loc'])
+----
+
+
++*Out[141]:*+
+----91----
+
+
++*In[142]:*+
+[source, ipython3]
+----
+Restaurant_locations.isna().sum()
+----
+
+
++*Out[142]:*+
+----Name        0
+count       0
+new_Name    0
+geo_loc     0
+dtype: int64----
+
+
++*In[143]:*+
+[source, ipython3]
+----
+Restaurant_locations['geo_loc'][0][0]
+----
+
+
++*Out[143]:*+
+----12.911275849999999----
+
+
++*In[144]:*+
+[source, ipython3]
+----
+Restaurant_locations['geo_loc'][0][1]
+----
+
+
++*Out[144]:*+
+----77.60456543431182----
+
+
++*In[147]:*+
+[source, ipython3]
+----
+np.array(Restaurant_locations['geo_loc'])
+----
+
+
++*Out[147]:*+
+----array([(12.911275849999999, 77.60456543431182), (13.2923988, 77.7519261),
+       (18.1475, 41.538889), (12.9732913, 77.6404672),
+       (12.2655944, 76.6465404), (27.64392675, 83.05280519687284),
+       (44.3730577, -71.6118577), (12.9552572, 77.6984163),
+       (12.9389434, 77.6021702), (13.2923988, 77.7519261),
+       (40.28745, -76.964526), (13.2923988, 77.7519261),
+       (12.93577245, 77.66676103753434), (12.9317704, 77.6228514),
+       (-6.1938201, 106.8920008), (12.9244803, 77.6502737),
+       (12.9778793, 77.6246697), (12.93433385, 77.63040639553275),
+       (29.4534927, -98.6440138), (15.8876779, 75.7046777),
+       (13.0221416, 77.6403368), (13.0027353, 77.5703253),
+       (13.8345913, 75.7339359), (43.9849475, -66.1215314),
+       (36.1014935, 44.6514938), (33.5935063, -79.0345627),
+       (12.996845, 77.6130165), (-33.8105886, 151.0046661),
+       (13.0093455, 77.6377094), (13.0288251, 77.5711478),
+       (40.7652844, -76.373824), (13.0141618, 77.6518539),
+       (12.9882338, 77.554883), (42.6768669, -88.1495275),
+       (12.9624669, 77.6381958), (19.2306891, 78.2300806),
+       (42.810397, -81.8348464), (51.4066693, -0.1582208),
+       (51.5173375, -0.073532), (12.945245, 77.6269144),
+       (18.5322493, 73.8499601124847), (12.9678074, 77.6568367),
+       (12.988721250000001, 77.58516877601824), (12.9417812, 77.6160146),
+       (12.9489339, 77.5968273), (12.9271867, 77.6266252),
+       (12.9081487, 77.5553179), (13.2227, 78.5541977),
+       (12.9089453, 77.6239038), (12.973936, 77.6509982),
+       (12.9931876, 77.5753419), (12.9933829, 77.5389467),
+       (41.3986533, -82.4199709), (-33.8687441, 18.5137421),
+       (13.0258087, 77.6305067), (1.2847055, 103.84320655721689),
+       (13.02383, 77.5529215), (13.0358698, 77.6323597),
+       (12.923525399999999, 77.62228735395182), (12.9846713, 77.6790908),
+       (12.9791198, 77.5912997), (12.9414662, 77.7470942),
+       (12.9673253, 77.7166857), (39.76880625, -86.15345077251979),
+       (12.7581056, 77.798884), (22.8359967, 69.3405962),
+       (19.060047150000003, 72.92375205185107), (13.0227204, 77.595715),
+       (15.8782951, 74.5084834), (23.1485712, 81.6048241),
+       (13.0621474, 77.58006135480495), (13.2923988, 77.7519261),
+       (12.9791198, 77.5912997), (12.957998, 77.6037312),
+       (53.4629144, -2.7000019), (12.9890242, 77.4718714),
+       (13.6285774, 77.4642026), (13.16843, 78.40116),
+       (12.8667841, 77.5347037), (51.4629324, -0.1601502),
+       (12.9791198, 77.5912997), (13.007516, 77.695935),
+       (13.0382184, 77.5919), (12.9055682, 77.5455438),
+       (12.9176571, 77.4837568), (12.9791198, 77.5912997),
+       (12.9791198, 77.5912997), (13.1006982, 77.5963454),
+       (12.9274413, 77.5155224), (13.0329419, 77.5273253),
+       (12.9546741, 77.5121724)], dtype=object)----
+
+
++*In[148]:*+
+[source, ipython3]
+----
+#### unzip it
+lat,lon=zip(*np.array(Restaurant_locations['geo_loc']))
+----
+
+
++*In[149]:*+
+[source, ipython3]
+----
+type(lat)
+----
+
+
++*Out[149]:*+
+----tuple----
+
+
++*In[150]:*+
+[source, ipython3]
+----
+Restaurant_locations['lat']=lat
+Restaurant_locations['lon']=lon
+----
+
+
++*In[151]:*+
+[source, ipython3]
+----
+Restaurant_locations.head()
+----
+
+
++*Out[151]:*+
+----
+[cols=",,,,,,",options="header",]
+|=======================================================================
+| |Name |count |new_Name |geo_loc |lat |lon
+|0 |BTM |4237 |Bangalore BTM |(12.911275849999999, 77.60456543431182)
+|12.911276 |77.604565
+
+|1 |Koramangala 5th Block |2358 |Bangalore Koramangala 5th Block
+|(13.2923988, 77.7519261) |13.292399 |77.751926
+
+|2 |HSR |2113 |Bangalore HSR |(18.1475, 41.538889) |18.147500 |41.538889
+
+|3 |Indiranagar |1892 |Bangalore Indiranagar |(12.9732913, 77.6404672)
+|12.973291 |77.640467
+
+|4 |JP Nagar |1849 |Bangalore JP Nagar |(12.2655944, 76.6465404)
+|12.265594 |76.646540
+|=======================================================================
+----
+
+
++*In[152]:*+
+[source, ipython3]
+----
+!pip install folium
+----
+
+
++*Out[152]:*+
+----
+Requirement already satisfied: folium in c:\users\mcr\anaconda3\lib\site-packages (0.10.1)
+Requirement already satisfied: branca>=0.3.0 in c:\users\mcr\anaconda3\lib\site-packages (from folium) (0.4.0)
+Requirement already satisfied: numpy in c:\users\mcr\anaconda3\lib\site-packages (from folium) (1.18.1)
+Requirement already satisfied: jinja2>=2.9 in c:\users\mcr\anaconda3\lib\site-packages (from folium) (2.11.2)
+Requirement already satisfied: requests in c:\users\mcr\anaconda3\lib\site-packages (from folium) (2.23.0)
+Requirement already satisfied: six in c:\users\mcr\anaconda3\lib\site-packages (from branca>=0.3.0->folium) (1.14.0)
+Requirement already satisfied: MarkupSafe>=0.23 in c:\users\mcr\anaconda3\lib\site-packages (from jinja2>=2.9->folium) (1.1.1)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in c:\users\mcr\anaconda3\lib\site-packages (from requests->folium) (1.25.8)
+Requirement already satisfied: certifi>=2017.4.17 in c:\users\mcr\anaconda3\lib\site-packages (from requests->folium) (2020.6.20)
+Requirement already satisfied: chardet<4,>=3.0.2 in c:\users\mcr\anaconda3\lib\site-packages (from requests->folium) (3.0.4)
+Requirement already satisfied: idna<3,>=2.5 in c:\users\mcr\anaconda3\lib\site-packages (from requests->folium) (2.8)
+----
+
+
++*In[153]:*+
+[source, ipython3]
+----
+import folium
+from folium.plugins import HeatMap
+basemap=generateBaseMap()
+----
+
+
++*In[154]:*+
+[source, ipython3]
+----
+basemap
+----
+
+
++*Out[154]:*+
+----
+
+----
+
+
++*In[155]:*+
+[source, ipython3]
+----
+Restaurant_locations[['lat','lon','count']].values.tolist()
+----
+
+
++*Out[155]:*+
+----[[12.911275849999999, 77.60456543431182, 4237.0],
+ [13.2923988, 77.7519261, 2358.0],
+ [18.1475, 41.538889, 2113.0],
+ [12.9732913, 77.6404672, 1892.0],
+ [12.2655944, 76.6465404, 1849.0],
+ [27.64392675, 83.05280519687284, 1711.0],
+ [44.3730577, -71.6118577, 1688.0],
+ [12.9552572, 77.6984163, 1488.0],
+ [12.9389434, 77.6021702, 1318.0],
+ [13.2923988, 77.7519261, 1103.0],
+ [40.28745, -76.964526, 1084.0],
+ [13.2923988, 77.7519261, 1084.0],
+ [12.93577245, 77.66676103753434, 1078.0],
+ [12.9317704, 77.6228514, 964.0],
+ [-6.1938201, 106.8920008, 963.0],
+ [12.9244803, 77.6502737, 913.0],
+ [12.9778793, 77.6246697, 901.0],
+ [12.93433385, 77.63040639553275, 864.0],
+ [29.4534927, -98.6440138, 818.0],
+ [15.8876779, 75.7046777, 805.0],
+ [13.0221416, 77.6403368, 745.0],
+ [13.0027353, 77.5703253, 657.0],
+ [13.8345913, 75.7339359, 628.0],
+ [43.9849475, -66.1215314, 626.0],
+ [36.1014935, 44.6514938, 607.0],
+ [33.5935063, -79.0345627, 579.0],
+ [12.996845, 77.6130165, 574.0],
+ [-33.8105886, 151.0046661, 550.0],
+ [13.0093455, 77.6377094, 522.0],
+ [13.0288251, 77.5711478, 521.0],
+ [40.7652844, -76.373824, 493.0],
+ [13.0141618, 77.6518539, 491.0],
+ [12.9882338, 77.554883, 487.0],
+ [42.6768669, -88.1495275, 475.0],
+ [12.9624669, 77.6381958, 426.0],
+ [19.2306891, 78.2300806, 390.0],
+ [42.810397, -81.8348464, 383.0],
+ [51.4066693, -0.1582208, 343.0],
+ [51.5173375, -0.073532, 309.0],
+ [12.945245, 77.6269144, 292.0],
+ [18.5322493, 73.8499601124847, 277.0],
+ [12.9678074, 77.6568367, 262.0],
+ [12.988721250000001, 77.58516877601824, 252.0],
+ [12.9417812, 77.6160146, 227.0],
+ [12.9489339, 77.5968273, 203.0],
+ [12.9271867, 77.6266252, 193.0],
+ [12.9081487, 77.5553179, 168.0],
+ [13.2227, 78.5541977, 165.0],
+ [12.9089453, 77.6239038, 157.0],
+ [12.973936, 77.6509982, 152.0],
+ [12.9931876, 77.5753419, 142.0],
+ [12.9933829, 77.5389467, 141.0],
+ [41.3986533, -82.4199709, 140.0],
+ [-33.8687441, 18.5137421, 137.0],
+ [13.0258087, 77.6305067, 129.0],
+ [1.2847055, 103.84320655721689, 118.0],
+ [13.02383, 77.5529215, 112.0],
+ [13.0358698, 77.6323597, 111.0],
+ [12.923525399999999, 77.62228735395182, 92.0],
+ [12.9846713, 77.6790908, 91.0],
+ [12.9791198, 77.5912997, 91.0],
+ [12.9414662, 77.7470942, 91.0],
+ [12.9673253, 77.7166857, 84.0],
+ [39.76880625, -86.15345077251979, 77.0],
+ [12.7581056, 77.798884, 74.0],
+ [22.8359967, 69.3405962, 69.0],
+ [19.060047150000003, 72.92375205185107, 66.0],
+ [13.0227204, 77.595715, 63.0],
+ [15.8782951, 74.5084834, 58.0],
+ [23.1485712, 81.6048241, 50.0],
+ [13.0621474, 77.58006135480495, 47.0],
+ [13.2923988, 77.7519261, 31.0],
+ [12.9791198, 77.5912997, 30.0],
+ [12.957998, 77.6037312, 27.0],
+ [53.4629144, -2.7000019, 26.0],
+ [12.9890242, 77.4718714, 24.0],
+ [13.6285774, 77.4642026, 23.0],
+ [13.16843, 78.40116, 22.0],
+ [12.8667841, 77.5347037, 19.0],
+ [51.4629324, -0.1601502, 18.0],
+ [12.9791198, 77.5912997, 14.0],
+ [13.007516, 77.695935, 11.0],
+ [13.0382184, 77.5919, 10.0],
+ [12.9055682, 77.5455438, 9.0],
+ [12.9176571, 77.4837568, 9.0],
+ [12.9791198, 77.5912997, 8.0],
+ [12.9791198, 77.5912997, 5.0],
+ [13.1006982, 77.5963454, 4.0],
+ [12.9274413, 77.5155224, 2.0],
+ [13.0329419, 77.5273253, 1.0],
+ [12.9546741, 77.5121724, 1.0]]----
+
+
++*In[156]:*+
+[source, ipython3]
+----
+HeatMap(Restaurant_locations[['lat','lon','count']].values.tolist(),zoom=20,radius=15).add_to(basemap)
+----
+
+
++*Out[156]:*+
+----<folium.plugins.heat_map.HeatMap at 0x5b08cc0fc8>----
+
+
++*In[157]:*+
+[source, ipython3]
+----
+basemap
+----
+
+
++*Out[157]:*+
+----
+
+----
+
+===== It is clear that restaurants tend to concentrate in central
+bangalore area.
+
+===== The clutter of restaurants lowers are we move away from central.
+
+===== So,potential restaurant entrepreneurs can refer this and find out
+good locations for their venture.
+
+==== note heatmap is good when we have latitude,longitude or imporatnce
+of that particular place or count of that place
+
+=== Heatmap of North Indian restaurants
+
+
++*In[158]:*+
+[source, ipython3]
+----
+df.head()
+----
+
+
++*Out[158]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8 |918
+|+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros, Cannelloni,
+Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800 |[('Rated
+3.0', "RATED\n Ambience is not that ... |[] |Buffet |Banashankari
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa |South
+Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8 |166 |+91
+8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining |Panipuri, Gol
+Gappe |North Indian, Rajasthani |600 |[('Rated 4.0', 'RATED\n Very good
+restaurant ... |[] |Buffet |Banashankari
+|=======================================================================
+----
+
+
++*In[159]:*+
+[source, ipython3]
+----
+df2= df[df['cuisines']=='North Indian']
+df2.head()
+----
+
+
++*Out[159]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|5 |https://www.zomato.com/bangalore/timepass-dinn... |37, 5-1, 4th
+Floor, Bosco Court, Gandhi Bazaar... |Timepass Dinner |Yes |No |3.8 |286
+|+91 9980040002\r\n+91 9980063005 |Basavanagudi |Casual Dining |Onion
+Rings, Pasta, Kadhai Paneer, Salads, Sal... |North Indian |600 |[('Rated
+3.0', 'RATED\n Food 3/5\nAmbience 3/... |[] |Buffet |Banashankari
+
+|50 |https://www.zomato.com/bangalore/petoo-banasha... |276, Ground
+Floor, 100 Feet Outer Ring Road, B... |Petoo |No |No |3.7 |21 |+91
+8026893211 |Banashankari |Quick Bites |NaN |North Indian |450 |[('Rated
+2.0', 'RATED\n This is a neatly made... |[] |Delivery |Banashankari
+
+|72 |https://www.zomato.com/bangalore/spicy-tandoor... |Opposite ICICi
+Bank, Hanuman Nagar, Banashanka... |Spicy Tandoor |No |No |0.0 |0 |+91
+8050884222 |Banashankari |Quick Bites |NaN |North Indian |150 |[('Rated
+4.0', 'RATED\n cost for chicken roll... |[] |Delivery |Banashankari
+
+|87 |https://www.zomato.com/bangalore/krishna-sagar... |38, 22nd Main,
+22nd Cross, Opposite BDA, 2nd S... |Krishna Sagar |No |No |3.5 |31 |+91
+8892752997\r\n+91 7204780429 |Banashankari |Quick Bites |NaN |North
+Indian |200 |[('Rated 1.0', 'RATED\n Worst experience with... |[]
+|Delivery |Banashankari
+
+|94 |https://www.zomato.com/bangalore/nandhini-delu... |304, Opposite
+Apollo Public School, 100 Feet R... |Nandhini Deluxe |No |No |2.6 |283
+|080 26890011\r\n080 26890033 |Banashankari |Casual Dining |Biryani,
+Chicken Guntur, Thali, Buttermilk, Ma... |North Indian |600 |[('Rated
+3.0', 'RATED\n Ididnt like much.\n\n... |[] |Delivery |Banashankari
+|=======================================================================
+----
+
+
++*In[160]:*+
+[source, ipython3]
+----
+north_india=df2.groupby(['location'],as_index=False)['url'].agg('count')
+north_india.columns=['Name','count']
+north_india.head()
+----
+
+
++*Out[160]:*+
+----
+[cols=",,",options="header",]
+|========================
+| |Name |count
+|0 |BTM |262
+|1 |Banashankari |35
+|2 |Banaswadi |9
+|3 |Bannerghatta Road |60
+|4 |Basavanagudi |17
+|========================
+----
+
+
++*In[161]:*+
+[source, ipython3]
+----
+north_india=north_india.merge(locations,on="Name",how='left').dropna()
+----
+
+
++*In[162]:*+
+[source, ipython3]
+----
+north_india.head()
+----
+
+
++*Out[162]:*+
+----
+[cols=",,,,",options="header",]
+|=======================================================================
+| |Name |count |new_Name |geo_loc
+|0 |BTM |262 |Bangalore BTM |(12.911275849999999, 77.60456543431182)
+
+|1 |Banashankari |35 |Bangalore Banashankari |(15.8876779, 75.7046777)
+
+|2 |Banaswadi |9 |Bangalore Banaswadi |(13.0141618, 77.6518539)
+
+|3 |Bannerghatta Road |60 |Bangalore Bannerghatta Road |(12.9389434,
+77.6021702)
+
+|4 |Basavanagudi |17 |Bangalore Basavanagudi |(13.8345913, 75.7339359)
+|=======================================================================
+----
+
+
++*In[163]:*+
+[source, ipython3]
+----
+north_india['lan'],north_india['lon']=zip(*north_india['geo_loc'].values)
+
+----
+
+
++*In[164]:*+
+[source, ipython3]
+----
+north_india.drop(['geo_loc'],axis=1)
+----
+
+
++*Out[164]:*+
+----
+[cols=",,,,,",options="header",]
+|=======================================================================
+| |Name |count |new_Name |lan |lon
+|0 |BTM |262 |Bangalore BTM |12.911276 |77.604565
+
+|1 |Banashankari |35 |Bangalore Banashankari |15.887678 |75.704678
+
+|2 |Banaswadi |9 |Bangalore Banaswadi |13.014162 |77.651854
+
+|3 |Bannerghatta Road |60 |Bangalore Bannerghatta Road |12.938943
+|77.602170
+
+|4 |Basavanagudi |17 |Bangalore Basavanagudi |13.834591 |75.733936
+
+|... |... |... |... |... |...
+
+|58 |Varthur Main Road, Whitefield |3 |Bangalore Varthur Main Road,
+Whitefield |12.941466 |77.747094
+
+|59 |Vasanth Nagar |12 |Bangalore Vasanth Nagar |12.988721 |77.585169
+
+|60 |Whitefield |146 |Bangalore Whitefield |44.373058 |-71.611858
+
+|61 |Wilson Garden |37 |Bangalore Wilson Garden |12.948934 |77.596827
+
+|62 |Yeshwantpur |3 |Bangalore Yeshwantpur |13.023830 |77.552921
+|=======================================================================
+
+63 rows × 5 columns
+----
+
+
++*In[165]:*+
+[source, ipython3]
+----
+basemap=generateBaseMap()
+HeatMap(north_india[['lan','lon','count']].values.tolist(),zoom=20,radius=15).add_to(basemap)
+basemap
+----
+
+
++*Out[165]:*+
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+====== What about South Indian cuisines?
+
+
++*In[166]:*+
+[source, ipython3]
+----
+df3= df[df['cuisines']=='South Indian']
+south_india=df2.groupby(['location'],as_index=False)['url'].agg('count')
+south_india.columns=['Name','count']
+south_india=south_india.merge(locations,on="Name",how='left').dropna()
+south_india['lan'],south_india['lon']=zip(*south_india['geo_loc'].values)
+
+----
+
+
++*In[167]:*+
+[source, ipython3]
+----
+south_india=south_india.drop(['geo_loc'],axis=1)
+----
+
+
++*In[168]:*+
+[source, ipython3]
+----
+south_india.head()
+----
+
+
++*Out[168]:*+
+----
+[cols=",,,,,",options="header",]
+|=======================================================================
+| |Name |count |new_Name |lan |lon
+|0 |BTM |262 |Bangalore BTM |12.911276 |77.604565
+
+|1 |Banashankari |35 |Bangalore Banashankari |15.887678 |75.704678
+
+|2 |Banaswadi |9 |Bangalore Banaswadi |13.014162 |77.651854
+
+|3 |Bannerghatta Road |60 |Bangalore Bannerghatta Road |12.938943
+|77.602170
+
+|4 |Basavanagudi |17 |Bangalore Basavanagudi |13.834591 |75.733936
+|=======================================================================
+----
+
+
++*In[169]:*+
+[source, ipython3]
+----
+basemap=generateBaseMap()
+HeatMap(south_india[['lan','lon','count']].values.tolist(),zoom=20,radius=15).add_to(basemap)
+basemap
+----
+
+
++*Out[169]:*+
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== Which are the most popular casual dining restaurant chains?
+
+
++*In[170]:*+
+[source, ipython3]
+----
+df_1=df.groupby(['rest_type','name']).agg('count')
+datas=df_1.sort_values(['url'],ascending=False).groupby(['rest_type'],
+                as_index=False).apply(lambda x : x.sort_values(by="url",ascending=False).head(3))['url'].reset_index().rename(columns={'url':'count'})
+----
+
+
++*In[171]:*+
+[source, ipython3]
+----
+datas
+----
+
+
++*Out[171]:*+
+----
+[cols=",,,,",options="header",]
+|==================================================
+| |level_0 |rest_type |name |count
+|0 |0 |Bakery |Just Bake |44
+|1 |0 |Bakery |Warm Oven |28
+|2 |0 |Bakery |INDULGE by InnerChef |28
+|3 |1 |Bakery, Beverage Shop |Homey Bake & Juice |1
+|4 |1 |Bakery, Beverage Shop |Bake The Cake |1
+|... |... |... |... |...
+|203 |85 |Takeaway |TheRiceBowl.In |8
+|204 |85 |Takeaway |Mount View Fast Food |7
+|205 |86 |Takeaway, Delivery |The Good Bowl |30
+|206 |86 |Takeaway, Delivery |BOX8- Desi Meals |27
+|207 |86 |Takeaway, Delivery |Juice Shop |19
+|==================================================
+
+208 rows × 4 columns
+----
+
+
++*In[172]:*+
+[source, ipython3]
+----
+df_1=df.groupby(['rest_type','name']).agg('count')
+df_1
+----
+
+
++*Out[172]:*+
+----
+url
+
+address
+
+online_order
+
+book_table
+
+rate
+
+votes
+
+phone
+
+location
+
+dish_liked
+
+cuisines
+
+approx_cost(for two people)
+
+reviews_list
+
+menu_item
+
+listed_in(type)
+
+listed_in(city)
+
+rest_type
+
+name
+
+Bakery
+
+7th Heaven
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+0
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+A Little For Love
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Adarsh Bakery
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+0
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+Adi's Cake N Cafe
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+0
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+Albert Bakery
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+Takeaway, Delivery
+
+Yumlane
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+0
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+Yumme Veg
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+0
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+Zamorin's Mappillah Biryani
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Zu's Doner Kebaps
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+eat.fit
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+0
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+7712 rows × 15 columns
+----
+
+
++*In[173]:*+
+[source, ipython3]
+----
+df_1.sort_values(['url'],ascending=False)
+----
+
+
++*Out[173]:*+
+----
+url
+
+address
+
+online_order
+
+book_table
+
+rate
+
+votes
+
+phone
+
+location
+
+dish_liked
+
+cuisines
+
+approx_cost(for two people)
+
+reviews_list
+
+menu_item
+
+listed_in(type)
+
+listed_in(city)
+
+rest_type
+
+name
+
+Cafe
+
+Cafe Coffee Day
+
+89
+
+89
+
+89
+
+89
+
+89
+
+89
+
+86
+
+89
+
+31
+
+89
+
+89
+
+89
+
+89
+
+89
+
+89
+
+Casual Dining, Cafe
+
+Onesta
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+85
+
+Quick Bites
+
+Five Star Chicken
+
+67
+
+67
+
+67
+
+67
+
+67
+
+67
+
+62
+
+67
+
+10
+
+67
+
+67
+
+67
+
+67
+
+67
+
+67
+
+Domino's Pizza
+
+60
+
+60
+
+60
+
+60
+
+60
+
+60
+
+60
+
+60
+
+55
+
+60
+
+60
+
+60
+
+60
+
+60
+
+60
+
+McDonald's
+
+59
+
+59
+
+59
+
+59
+
+59
+
+59
+
+59
+
+59
+
+57
+
+59
+
+59
+
+59
+
+59
+
+59
+
+59
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+New Students Corner
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Dessert Parlor
+
+Mr Gola
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Casual Dining
+
+Parijatha Paradise
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Parijatha Fish Land
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Delivery
+
+SaJuSo
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+7712 rows × 15 columns
+----
+
+
++*In[174]:*+
+[source, ipython3]
+----
+df_1.sort_values(['url'],ascending=False).groupby(['rest_type'],as_index=False).apply(lambda x : x.sort_values(by="url",ascending=False))
+----
+
+
++*Out[174]:*+
+----
+url
+
+address
+
+online_order
+
+book_table
+
+rate
+
+votes
+
+phone
+
+location
+
+dish_liked
+
+cuisines
+
+approx_cost(for two people)
+
+reviews_list
+
+menu_item
+
+listed_in(type)
+
+listed_in(city)
+
+rest_type
+
+name
+
+0
+
+Bakery
+
+Just Bake
+
+44
+
+44
+
+44
+
+44
+
+44
+
+44
+
+44
+
+44
+
+14
+
+44
+
+44
+
+44
+
+44
+
+44
+
+44
+
+Warm Oven
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+7
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+INDULGE by InnerChef
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+0
+
+28
+
+28
+
+28
+
+28
+
+28
+
+28
+
+Karachi Bakery
+
+26
+
+26
+
+26
+
+26
+
+26
+
+26
+
+24
+
+26
+
+3
+
+26
+
+26
+
+26
+
+26
+
+26
+
+26
+
+CakeZone
+
+21
+
+21
+
+21
+
+21
+
+21
+
+21
+
+21
+
+21
+
+10
+
+21
+
+21
+
+21
+
+21
+
+21
+
+21
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+...
+
+86
+
+Takeaway, Delivery
+
+Agraharam Meal
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Adyar Ananda Bhavan Sweets
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Faasos
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+@North Parontha Hut
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+0
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Lucky Singh & Co
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+7712 rows × 15 columns
+----
+
+
++*In[175]:*+
+[source, ipython3]
+----
+df_1.sort_values(['url'],ascending=False).groupby(['rest_type'],as_index=False).apply(lambda x : x.sort_values(by="url",ascending=False))['url']
+----
+
+
++*Out[175]:*+
+----    rest_type           name                      
+0   Bakery              Just Bake                     44
+                        Warm Oven                     28
+                        INDULGE by InnerChef          28
+                        Karachi Bakery                26
+                        CakeZone                      21
+                                                      ..
+86  Takeaway, Delivery  Agraharam Meal                 1
+                        Adyar Ananda Bhavan Sweets     1
+                        Faasos                         1
+                        @North Parontha Hut            1
+                        Lucky Singh & Co               1
+Name: url, Length: 7712, dtype: int64----
+
+
++*In[176]:*+
+[source, ipython3]
+----
+df_1.sort_values(['url'],ascending=False).groupby(['rest_type'],as_index=False).apply(lambda x : x.sort_values(by="url",ascending=False))['url'].reset_index()
+----
+
+
++*Out[176]:*+
+----
+[cols=",,,,",options="header",]
+|===========================================================
+| |level_0 |rest_type |name |url
+|0 |0 |Bakery |Just Bake |44
+|1 |0 |Bakery |Warm Oven |28
+|2 |0 |Bakery |INDULGE by InnerChef |28
+|3 |0 |Bakery |Karachi Bakery |26
+|4 |0 |Bakery |CakeZone |21
+|... |... |... |... |...
+|7707 |86 |Takeaway, Delivery |Agraharam Meal |1
+|7708 |86 |Takeaway, Delivery |Adyar Ananda Bhavan Sweets |1
+|7709 |86 |Takeaway, Delivery |Faasos |1
+|7710 |86 |Takeaway, Delivery |@North Parontha Hut |1
+|7711 |86 |Takeaway, Delivery |Lucky Singh & Co |1
+|===========================================================
+
+7712 rows × 4 columns
+----
+
+
++*In[177]:*+
+[source, ipython3]
+----
+dataset=df_1.sort_values(['url'],ascending=False).groupby(['rest_type'],
+                as_index=False).apply(lambda x : x.sort_values(by="url",ascending=False))['url'].reset_index().rename(columns={'url':'count'})
+----
+
+
++*In[178]:*+
+[source, ipython3]
+----
+dataset
+----
+
+
++*Out[178]:*+
+----
+[cols=",,,,",options="header",]
+|===========================================================
+| |level_0 |rest_type |name |count
+|0 |0 |Bakery |Just Bake |44
+|1 |0 |Bakery |Warm Oven |28
+|2 |0 |Bakery |INDULGE by InnerChef |28
+|3 |0 |Bakery |Karachi Bakery |26
+|4 |0 |Bakery |CakeZone |21
+|... |... |... |... |...
+|7707 |86 |Takeaway, Delivery |Agraharam Meal |1
+|7708 |86 |Takeaway, Delivery |Adyar Ananda Bhavan Sweets |1
+|7709 |86 |Takeaway, Delivery |Faasos |1
+|7710 |86 |Takeaway, Delivery |@North Parontha Hut |1
+|7711 |86 |Takeaway, Delivery |Lucky Singh & Co |1
+|===========================================================
+
+7712 rows × 4 columns
+----
+
+===== Which are the most popular casual dining restaurant chains?
+
+
++*In[179]:*+
+[source, ipython3]
+----
+casual=dataset[dataset['rest_type']=='Casual Dining']
+casual
+----
+
+
++*Out[179]:*+
+----
+[cols=",,,,",options="header",]
+|=======================================================================
+| |level_0 |rest_type |name |count
+|1001 |24 |Casual Dining |Empire Restaurant |58
+
+|1002 |24 |Casual Dining |Beijing Bites |48
+
+|1003 |24 |Casual Dining |Mani's Dum Biryani |47
+
+|1004 |24 |Casual Dining |Chung Wah |46
+
+|1005 |24 |Casual Dining |Oye Amritsar |41
+
+|... |... |... |... |...
+
+|2635 |24 |Casual Dining |Uppercut - Sheraton Grand Bengaluru
+Whitefield... |1
+
+|2636 |24 |Casual Dining |Utsav Restaurant |1
+
+|2637 |24 |Casual Dining |VMS Star Biriyani |1
+
+|2638 |24 |Casual Dining |Veruthe Oru Thattukada |1
+
+|2639 |24 |Casual Dining |Parijatha Fish Land |1
+|=======================================================================
+
+1639 rows × 4 columns
+----
+
+
++*In[180]:*+
+[source, ipython3]
+----
+df.shape
+----
+
+
++*Out[180]:*+
+----(43690, 17)----
+
+We can see tht Empire restaurant,Beijing bites and Mani’s dum biriyani
+are the most popular casual dining restaurant chains in Bangalore. We
+will inspect them further…
+
+===== Where are their outlets located?
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== Wordcloud of dishes liked by cuisines.
+
+
++*In[181]:*+
+[source, ipython3]
+----
+!pip install wordcloud
+----
+
+
++*Out[181]:*+
+----
+Requirement already satisfied: wordcloud in c:\users\mcr\anaconda3\lib\site-packages (1.8.0)
+Requirement already satisfied: numpy>=1.6.1 in c:\users\mcr\anaconda3\lib\site-packages (from wordcloud) (1.18.1)
+Requirement already satisfied: matplotlib in c:\users\mcr\anaconda3\lib\site-packages (from wordcloud) (3.2.2)
+Requirement already satisfied: pillow in c:\users\mcr\anaconda3\lib\site-packages (from wordcloud) (6.2.0)
+Requirement already satisfied: python-dateutil>=2.1 in c:\users\mcr\anaconda3\lib\site-packages (from matplotlib->wordcloud) (2.8.1)
+Requirement already satisfied: kiwisolver>=1.0.1 in c:\users\mcr\anaconda3\lib\site-packages (from matplotlib->wordcloud) (1.1.0)
+Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,>=2.0.1 in c:\users\mcr\anaconda3\lib\site-packages (from matplotlib->wordcloud) (2.4.6)
+Requirement already satisfied: cycler>=0.10 in c:\users\mcr\anaconda3\lib\site-packages (from matplotlib->wordcloud) (0.10.0)
+Requirement already satisfied: six>=1.5 in c:\users\mcr\anaconda3\lib\site-packages (from python-dateutil>=2.1->matplotlib->wordcloud) (1.14.0)
+Requirement already satisfied: setuptools in c:\users\mcr\anaconda3\lib\site-packages (from kiwisolver>=1.0.1->matplotlib->wordcloud) (49.6.0)
+----
+
+
++*In[182]:*+
+[source, ipython3]
+----
+from wordcloud import WordCloud
+----
+
+
++*In[183]:*+
+[source, ipython3]
+----
+df.head()
+----
+
+
++*Out[183]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8 |918
+|+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros, Cannelloni,
+Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800 |[('Rated
+3.0', "RATED\n Ambience is not that ... |[] |Buffet |Banashankari
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa |South
+Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8 |166 |+91
+8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining |Panipuri, Gol
+Gappe |North Indian, Rajasthani |600 |[('Rated 4.0', 'RATED\n Very good
+restaurant ... |[] |Buffet |Banashankari
+|=======================================================================
+----
+
+
++*In[184]:*+
+[source, ipython3]
+----
+df['update_dish_liked']=df['dish_liked'].apply(lambda x : x.split(',') if type(x)==str else [''])
+----
+
+
++*In[185]:*+
+[source, ipython3]
+----
+df.head()
+----
+
+
++*Out[185]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|update_dish_liked
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari |[Pasta, Lunch Buffet, Masala Papad, Paneer ...
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+|[Momos, Lunch Buffet, Chocolate Nirvana, Th...
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8 |918
+|+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros, Cannelloni,
+Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800 |[('Rated
+3.0', "RATED\n Ambience is not that ... |[] |Buffet |Banashankari
+|[Churros, Cannelloni, Minestrone Soup, Hot ...
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa |South
+Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari |[Masala Dosa]
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8 |166 |+91
+8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining |Panipuri, Gol
+Gappe |North Indian, Rajasthani |600 |[('Rated 4.0', 'RATED\n Very good
+restaurant ... |[] |Buffet |Banashankari |[Panipuri, Gol Gappe]
+|=======================================================================
+----
+
+
++*In[186]:*+
+[source, ipython3]
+----
+df['rest_type'].value_counts()[:9].index
+----
+
+
++*Out[186]:*+
+----Index(['Quick Bites', 'Casual Dining', 'Cafe', 'Dessert Parlor', 'Delivery',
+       'Takeaway, Delivery', 'Casual Dining, Bar', 'Bakery', 'Beverage Shop'],
+      dtype='object')----
+
+
++*In[187]:*+
+[source, ipython3]
+----
+rest=df['rest_type'].value_counts()[:9].index
+----
+
+===== create wordcloud for each and every restaurant
+
+
++*In[188]:*+
+[source, ipython3]
+----
+from wordcloud import WordCloud, STOPWORDS 
+----
+
+
++*In[189]:*+
+[source, ipython3]
+----
+df.isna().sum()
+----
+
+
++*Out[189]:*+
+----url                                0
+address                            0
+name                               0
+online_order                       0
+book_table                         0
+rate                               0
+votes                              0
+phone                            591
+location                           0
+rest_type                        149
+dish_liked                     20216
+cuisines                           8
+approx_cost(for two people)        0
+reviews_list                       0
+menu_item                          0
+listed_in(type)                    0
+listed_in(city)                    0
+update_dish_liked                  0
+dtype: int64----
+
+
++*In[190]:*+
+[source, ipython3]
+----
+df.dropna(axis='index',subset=['rest_type'],inplace=True)
+----
+
+
++*In[191]:*+
+[source, ipython3]
+----
+df.dropna(axis='index',subset=['dish_liked'],inplace=True)
+----
+
+
++*In[192]:*+
+[source, ipython3]
+----
+df.isna().sum()
+----
+
+
++*Out[192]:*+
+----url                              0
+address                          0
+name                             0
+online_order                     0
+book_table                       0
+rate                             0
+votes                            0
+phone                          213
+location                         0
+rest_type                        0
+dish_liked                       0
+cuisines                         0
+approx_cost(for two people)      0
+reviews_list                     0
+menu_item                        0
+listed_in(type)                  0
+listed_in(city)                  0
+update_dish_liked                0
+dtype: int64----
+
+===== wordcloud for 1 restaurant
+
+
++*In[193]:*+
+[source, ipython3]
+----
+data=df[df['rest_type']=='Quick Bites']
+----
+
+
++*In[194]:*+
+[source, ipython3]
+----
+data['dish_liked']
+----
+
+
++*Out[194]:*+
+----3                                              Masala Dosa
+31       Burgers, Lassi, Chicken Grill, Naan, Momos, Ch...
+34       Rolls, Veggie Wrap, Chocolate Fantasy, Rice Bo...
+40       Dabeli, Faluda, Masala Poori, Sandwiches, Tokr...
+42                           Burgers, Fries, Hot Chocolate
+                               ...                        
+51598                          Potato Fries, Chicken Curry
+51601    Rolls, Chicken Tikka Roll, Chicken Bhuna Roll,...
+51617                               Coffee, Vada, Mla Dosa
+51629                             Fish, Veg Thali, Biryani
+51645                                              Burgers
+Name: dish_liked, Length: 5269, dtype: object----
+
+
++*In[197]:*+
+[source, ipython3]
+----
+stopwords=set(STOPWORDS)
+----
+
+
++*In[198]:*+
+[source, ipython3]
+----
+dishes=''
+for word in data['dish_liked']:
+    words=word.split()
+    # Converts each token into lowercase 
+    for i in range(len(words)): 
+        words[i] = words[i].lower() 
+    dishes=dishes+ " ".join(words)+" "
+wordcloud = WordCloud(max_font_size=None, background_color='white', collocations=False,stopwords = stopwords,width=1500, height=1500).generate(dishes)
+plt.imshow(wordcloud)
+plt.axis("off")
+----
+
+
++*Out[198]:*+
+----(-0.5, 1499.5, 1499.5, -0.5)
+![png](output_280_1.png)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[199]:*+
+[source, ipython3]
+----
+def produce_wordcloud(rest):
+    
+    plt.figure(figsize=(20,30))
+    for i,restaurant in enumerate(rest):
+        plt.subplot(3,3,i+1)
+        dishes=''
+        data=df[df['rest_type']==restaurant]
+        for word in data['dish_liked']:
+            words=word.split()
+            # Converts each token into lowercase 
+            for i in range(len(words)): 
+                words[i] = words[i].lower() 
+            dishes=dishes+ " ".join(words)+" "
+        wordcloud = WordCloud(max_font_size=None, background_color='white', collocations=False,stopwords = stopwords,width=1500, height=1500).generate(dishes)
+        plt.imshow(wordcloud)
+        plt.title(restaurant)
+        plt.axis("off")
+----
+
+
++*In[200]:*+
+[source, ipython3]
+----
+stopwords = set(STOPWORDS) 
+produce_wordcloud(rest)
+----
+
+
++*Out[200]:*+
+----
+![png](output_283_0.png)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== analysing Reviews of Particular Restaurant
+
+
++*In[201]:*+
+[source, ipython3]
+----
+df.head()
+----
+
+
++*Out[201]:*+
+----
+[cols=",,,,,,,,,,,,,,,,,,",options="header",]
+|=======================================================================
+| |url |address |name |online_order |book_table |rate |votes |phone
+|location |rest_type |dish_liked |cuisines |approx_cost(for two people)
+|reviews_list |menu_item |listed_in(type) |listed_in(city)
+|update_dish_liked
+|0 |https://www.zomato.com/bangalore/jalsa-banasha... |942, 21st Main
+Road, 2nd Stage, Banashankari, ... |Jalsa |Yes |Yes |4.1 |775 |080
+42297555\r\n+91 9743772233 |Banashankari |Casual Dining |Pasta, Lunch
+Buffet, Masala Papad, Paneer Laja... |North Indian, Mughlai, Chinese
+|800 |[('Rated 4.0', 'RATED\n A beautiful place to ... |[] |Buffet
+|Banashankari |[Pasta, Lunch Buffet, Masala Papad, Paneer ...
+
+|1 |https://www.zomato.com/bangalore/spice-elephan... |2nd Floor, 80
+Feet Road, Near Big Bazaar, 6th ... |Spice Elephant |Yes |No |4.1 |787
+|080 41714161 |Banashankari |Casual Dining |Momos, Lunch Buffet,
+Chocolate Nirvana, Thai G... |Chinese, North Indian, Thai |800 |[('Rated
+4.0', 'RATED\n Had been here for din... |[] |Buffet |Banashankari
+|[Momos, Lunch Buffet, Chocolate Nirvana, Th...
+
+|2 |https://www.zomato.com/SanchurroBangalore?cont... |1112, Next to
+KIMS Medical College, 17th Cross... |San Churro Cafe |Yes |No |3.8 |918
+|+91 9663487993 |Banashankari |Cafe, Casual Dining |Churros, Cannelloni,
+Minestrone Soup, Hot Choc... |Cafe, Mexican, Italian |800 |[('Rated
+3.0', "RATED\n Ambience is not that ... |[] |Buffet |Banashankari
+|[Churros, Cannelloni, Minestrone Soup, Hot ...
+
+|3 |https://www.zomato.com/bangalore/addhuri-udupi... |1st Floor,
+Annakuteera, 3rd Stage, Banashankar... |Addhuri Udupi Bhojana |No |No
+|3.7 |88 |+91 9620009302 |Banashankari |Quick Bites |Masala Dosa |South
+Indian, North Indian |300 |[('Rated 4.0', "RATED\n Great food and
+proper... |[] |Buffet |Banashankari |[Masala Dosa]
+
+|4 |https://www.zomato.com/bangalore/grand-village... |10, 3rd Floor,
+Lakshmi Associates, Gandhi Baza... |Grand Village |No |No |3.8 |166 |+91
+8026612447\r\n+91 9901210005 |Basavanagudi |Casual Dining |Panipuri, Gol
+Gappe |North Indian, Rajasthani |600 |[('Rated 4.0', 'RATED\n Very good
+restaurant ... |[] |Buffet |Banashankari |[Panipuri, Gol Gappe]
+|=======================================================================
+----
+
+
++*In[202]:*+
+[source, ipython3]
+----
+df['reviews_list'][0]
+----
+
+
++*Out[202]:*+
+----'[(\'Rated 4.0\', \'RATED\\n  A beautiful place to dine in.The interiors take you back to the Mughal era. The lightings are just perfect.We went there on the occasion of Christmas and so they had only limited items available. But the taste and service was not compromised at all.The only complaint is that the breads could have been better.Would surely like to come here again.\'), (\'Rated 4.0\', \'RATED\\n  I was here for dinner with my family on a weekday. The restaurant was completely empty. Ambience is good with some good old hindi music. Seating arrangement are good too. We ordered masala papad, panner and baby corn starters, lemon and corrionder soup, butter roti, olive and chilli paratha. Food was fresh and good, service is good too. Good for family hangout.\\nCheers\'), (\'Rated 2.0\', \'RATED\\n  Its a restaurant near to Banashankari BDA. Me along with few of my office friends visited to have buffet but unfortunately they only provide veg buffet. On inquiring they said this place is mostly visited by vegetarians. Anyways we ordered ala carte items which took ages to come. Food was ok ok. Definitely not visiting anymore.\'), (\'Rated 4.0\', \'RATED\\n  We went here on a weekend and one of us had the buffet while two of us took Ala Carte. Firstly the ambience and service of this place is great! The buffet had a lot of items and the good was good. We had a Pumpkin Halwa intm the dessert which was amazing. Must try! The kulchas are great here. Cheers!\'), (\'Rated 5.0\', \'RATED\\n  The best thing about the place is itÃ\x83\\x83Ã\x82\\x83Ã\x83\\x82Ã\x82\\x82Ã\x83\\x83Ã\x82\\x82Ã\x83\\x82Ã\x82\\x92s ambiance. Second best thing was yummy ? food. We try buffet and buffet food was not disappointed us.\\nTest ?. ?? ?? ?? ?? ??\\nQuality ?. ??????????.\\nService: Staff was very professional and friendly.\\n\\nOverall experience was excellent.\\n\\nsubirmajumder85.wixsite.com\'), (\'Rated 5.0\', \'RATED\\n  Great food and pleasant ambience. Expensive but Coll place to chill and relax......\\n\\nService is really very very good and friendly staff...\\n\\nFood : 5/5\\nService : 5/5\\nAmbience :5/5\\nOverall :5/5\'), (\'Rated 4.0\', \'RATED\\n  Good ambience with tasty food.\\nCheese chilli paratha with Bhutta palak methi curry is a good combo.\\nLemon Chicken in the starters is a must try item.\\nEgg fried rice was also quite tasty.\\nIn the mocktails, recommend "Alice in Junoon". Do not miss it.\'), (\'Rated 4.0\', \'RATED\\n  You canÃ\x83\\x83Ã\x82\\x83Ã\x83\\x82Ã\x82\\x82Ã\x83\\x83Ã\x82\\x82Ã\x83\\x82Ã\x82\\x92t go wrong with Jalsa. Never been a fan of their buffet and thus always order alacarteÃ\x83\\x83Ã\x82\\x83Ã\x83\\x82Ã\x82\\x82Ã\x83\\x83Ã\x82\\x82Ã\x83\\x82Ã\x82\\x92. Service at times can be on the slower side but food is worth the wait.\'), (\'Rated 5.0\', \'RATED\\n  Overdelighted by the service and food provided at this place. A royal and ethnic atmosphere builds a strong essence of being in India and also the quality and taste of food is truly authentic. I would totally recommend to visit this place once.\'), (\'Rated 4.0\', \'RATED\\n  The place is nice and comfortable. Food wise all jalea outlets maintain a good standard. The soya chaap was a standout dish. Clearly one of trademark dish as per me and a must try.\\n\\nThe only concern is the parking. It very congested and limited to just 5cars. The basement parking is very steep and makes it cumbersome\'), (\'Rated 4.0\', \'RATED\\n  The place is nice and comfortable. Food wise all jalea outlets maintain a good standard. The soya chaap was a standout dish. Clearly one of trademark dish as per me and a must try.\\n\\nThe only concern is the parking. It very congested and limited to just 5cars. The basement parking is very steep and makes it cumbersome\'), (\'Rated 4.0\', \'RATED\\n  The place is nice and comfortable. Food wise all jalea outlets maintain a good standard. The soya chaap was a standout dish. Clearly one of trademark dish as per me and a must try.\\n\\nThe only concern is the parking. It very congested and limited to just 5cars. The basement parking is very steep and makes it cumbersome\')]'----
+
+
++*In[203]:*+
+[source, ipython3]
+----
+data=df['reviews_list'][0].lower()
+data
+----
+
+
++*Out[203]:*+
+----'[(\'rated 4.0\', \'rated\\n  a beautiful place to dine in.the interiors take you back to the mughal era. the lightings are just perfect.we went there on the occasion of christmas and so they had only limited items available. but the taste and service was not compromised at all.the only complaint is that the breads could have been better.would surely like to come here again.\'), (\'rated 4.0\', \'rated\\n  i was here for dinner with my family on a weekday. the restaurant was completely empty. ambience is good with some good old hindi music. seating arrangement are good too. we ordered masala papad, panner and baby corn starters, lemon and corrionder soup, butter roti, olive and chilli paratha. food was fresh and good, service is good too. good for family hangout.\\ncheers\'), (\'rated 2.0\', \'rated\\n  its a restaurant near to banashankari bda. me along with few of my office friends visited to have buffet but unfortunately they only provide veg buffet. on inquiring they said this place is mostly visited by vegetarians. anyways we ordered ala carte items which took ages to come. food was ok ok. definitely not visiting anymore.\'), (\'rated 4.0\', \'rated\\n  we went here on a weekend and one of us had the buffet while two of us took ala carte. firstly the ambience and service of this place is great! the buffet had a lot of items and the good was good. we had a pumpkin halwa intm the dessert which was amazing. must try! the kulchas are great here. cheers!\'), (\'rated 5.0\', \'rated\\n  the best thing about the place is itã\x83\\x83ã\x82\\x83ã\x83\\x82ã\x82\\x82ã\x83\\x83ã\x82\\x82ã\x83\\x82ã\x82\\x92s ambiance. second best thing was yummy ? food. we try buffet and buffet food was not disappointed us.\\ntest ?. ?? ?? ?? ?? ??\\nquality ?. ??????????.\\nservice: staff was very professional and friendly.\\n\\noverall experience was excellent.\\n\\nsubirmajumder85.wixsite.com\'), (\'rated 5.0\', \'rated\\n  great food and pleasant ambience. expensive but coll place to chill and relax......\\n\\nservice is really very very good and friendly staff...\\n\\nfood : 5/5\\nservice : 5/5\\nambience :5/5\\noverall :5/5\'), (\'rated 4.0\', \'rated\\n  good ambience with tasty food.\\ncheese chilli paratha with bhutta palak methi curry is a good combo.\\nlemon chicken in the starters is a must try item.\\negg fried rice was also quite tasty.\\nin the mocktails, recommend "alice in junoon". do not miss it.\'), (\'rated 4.0\', \'rated\\n  you canã\x83\\x83ã\x82\\x83ã\x83\\x82ã\x82\\x82ã\x83\\x83ã\x82\\x82ã\x83\\x82ã\x82\\x92t go wrong with jalsa. never been a fan of their buffet and thus always order alacarteã\x83\\x83ã\x82\\x83ã\x83\\x82ã\x82\\x82ã\x83\\x83ã\x82\\x82ã\x83\\x82ã\x82\\x92. service at times can be on the slower side but food is worth the wait.\'), (\'rated 5.0\', \'rated\\n  overdelighted by the service and food provided at this place. a royal and ethnic atmosphere builds a strong essence of being in india and also the quality and taste of food is truly authentic. i would totally recommend to visit this place once.\'), (\'rated 4.0\', \'rated\\n  the place is nice and comfortable. food wise all jalea outlets maintain a good standard. the soya chaap was a standout dish. clearly one of trademark dish as per me and a must try.\\n\\nthe only concern is the parking. it very congested and limited to just 5cars. the basement parking is very steep and makes it cumbersome\'), (\'rated 4.0\', \'rated\\n  the place is nice and comfortable. food wise all jalea outlets maintain a good standard. the soya chaap was a standout dish. clearly one of trademark dish as per me and a must try.\\n\\nthe only concern is the parking. it very congested and limited to just 5cars. the basement parking is very steep and makes it cumbersome\'), (\'rated 4.0\', \'rated\\n  the place is nice and comfortable. food wise all jalea outlets maintain a good standard. the soya chaap was a standout dish. clearly one of trademark dish as per me and a must try.\\n\\nthe only concern is the parking. it very congested and limited to just 5cars. the basement parking is very steep and makes it cumbersome\')]'----
+
+
++*In[204]:*+
+[source, ipython3]
+----
+import re
+data2=re.sub('[^a-zA-Z]', ' ',data)
+data2
+----
+
+
++*Out[204]:*+
+----'   rated        rated n  a beautiful place to dine in the interiors take you back to the mughal era  the lightings are just perfect we went there on the occasion of christmas and so they had only limited items available  but the taste and service was not compromised at all the only complaint is that the breads could have been better would surely like to come here again       rated        rated n  i was here for dinner with my family on a weekday  the restaurant was completely empty  ambience is good with some good old hindi music  seating arrangement are good too  we ordered masala papad  panner and baby corn starters  lemon and corrionder soup  butter roti  olive and chilli paratha  food was fresh and good  service is good too  good for family hangout  ncheers      rated        rated n  its a restaurant near to banashankari bda  me along with few of my office friends visited to have buffet but unfortunately they only provide veg buffet  on inquiring they said this place is mostly visited by vegetarians  anyways we ordered ala carte items which took ages to come  food was ok ok  definitely not visiting anymore       rated        rated n  we went here on a weekend and one of us had the buffet while two of us took ala carte  firstly the ambience and service of this place is great  the buffet had a lot of items and the good was good  we had a pumpkin halwa intm the dessert which was amazing  must try  the kulchas are great here  cheers       rated        rated n  the best thing about the place is it   x     x     x     x     x     x     x     x  s ambiance  second best thing was yummy   food  we try buffet and buffet food was not disappointed us  ntest                   nquality                nservice  staff was very professional and friendly  n noverall experience was excellent  n nsubirmajumder   wixsite com      rated        rated n  great food and pleasant ambience  expensive but coll place to chill and relax       n nservice is really very very good and friendly staff    n nfood       nservice       nambience      noverall           rated        rated n  good ambience with tasty food  ncheese chilli paratha with bhutta palak methi curry is a good combo  nlemon chicken in the starters is a must try item  negg fried rice was also quite tasty  nin the mocktails  recommend  alice in junoon   do not miss it       rated        rated n  you can   x     x     x     x     x     x     x     x  t go wrong with jalsa  never been a fan of their buffet and thus always order alacarte   x     x     x     x     x     x     x     x    service at times can be on the slower side but food is worth the wait       rated        rated n  overdelighted by the service and food provided at this place  a royal and ethnic atmosphere builds a strong essence of being in india and also the quality and taste of food is truly authentic  i would totally recommend to visit this place once       rated        rated n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome      rated        rated n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome      rated        rated n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome   '----
+
+
++*In[205]:*+
+[source, ipython3]
+----
+data3=re.sub('rated', ' ',data2)
+data3
+----
+
+
++*Out[205]:*+
+----'              n  a beautiful place to dine in the interiors take you back to the mughal era  the lightings are just perfect we went there on the occasion of christmas and so they had only limited items available  but the taste and service was not compromised at all the only complaint is that the breads could have been better would surely like to come here again                  n  i was here for dinner with my family on a weekday  the restaurant was completely empty  ambience is good with some good old hindi music  seating arrangement are good too  we ordered masala papad  panner and baby corn starters  lemon and corrionder soup  butter roti  olive and chilli paratha  food was fresh and good  service is good too  good for family hangout  ncheers                 n  its a restaurant near to banashankari bda  me along with few of my office friends visited to have buffet but unfortunately they only provide veg buffet  on inquiring they said this place is mostly visited by vegetarians  anyways we ordered ala carte items which took ages to come  food was ok ok  definitely not visiting anymore                  n  we went here on a weekend and one of us had the buffet while two of us took ala carte  firstly the ambience and service of this place is great  the buffet had a lot of items and the good was good  we had a pumpkin halwa intm the dessert which was amazing  must try  the kulchas are great here  cheers                  n  the best thing about the place is it   x     x     x     x     x     x     x     x  s ambiance  second best thing was yummy   food  we try buffet and buffet food was not disappointed us  ntest                   nquality                nservice  staff was very professional and friendly  n noverall experience was excellent  n nsubirmajumder   wixsite com                 n  great food and pleasant ambience  expensive but coll place to chill and relax       n nservice is really very very good and friendly staff    n nfood       nservice       nambience      noverall                      n  good ambience with tasty food  ncheese chilli paratha with bhutta palak methi curry is a good combo  nlemon chicken in the starters is a must try item  negg fried rice was also quite tasty  nin the mocktails  recommend  alice in junoon   do not miss it                  n  you can   x     x     x     x     x     x     x     x  t go wrong with jalsa  never been a fan of their buffet and thus always order alacarte   x     x     x     x     x     x     x     x    service at times can be on the slower side but food is worth the wait                  n  overdelighted by the service and food provided at this place  a royal and ethnic atmosphere builds a strong essence of being in india and also the quality and taste of food is truly authentic  i would totally recommend to visit this place once                  n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome                 n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome                 n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome   '----
+
+
++*In[206]:*+
+[source, ipython3]
+----
+data4=re.sub('x',' ',data3)
+data4
+----
+
+
++*Out[206]:*+
+----'              n  a beautiful place to dine in the interiors take you back to the mughal era  the lightings are just perfect we went there on the occasion of christmas and so they had only limited items available  but the taste and service was not compromised at all the only complaint is that the breads could have been better would surely like to come here again                  n  i was here for dinner with my family on a weekday  the restaurant was completely empty  ambience is good with some good old hindi music  seating arrangement are good too  we ordered masala papad  panner and baby corn starters  lemon and corrionder soup  butter roti  olive and chilli paratha  food was fresh and good  service is good too  good for family hangout  ncheers                 n  its a restaurant near to banashankari bda  me along with few of my office friends visited to have buffet but unfortunately they only provide veg buffet  on inquiring they said this place is mostly visited by vegetarians  anyways we ordered ala carte items which took ages to come  food was ok ok  definitely not visiting anymore                  n  we went here on a weekend and one of us had the buffet while two of us took ala carte  firstly the ambience and service of this place is great  the buffet had a lot of items and the good was good  we had a pumpkin halwa intm the dessert which was amazing  must try  the kulchas are great here  cheers                  n  the best thing about the place is it                                                s ambiance  second best thing was yummy   food  we try buffet and buffet food was not disappointed us  ntest                   nquality                nservice  staff was very professional and friendly  n noverall e perience was e cellent  n nsubirmajumder   wi site com                 n  great food and pleasant ambience  e pensive but coll place to chill and rela        n nservice is really very very good and friendly staff    n nfood       nservice       nambience      noverall                      n  good ambience with tasty food  ncheese chilli paratha with bhutta palak methi curry is a good combo  nlemon chicken in the starters is a must try item  negg fried rice was also quite tasty  nin the mocktails  recommend  alice in junoon   do not miss it                  n  you can                                                t go wrong with jalsa  never been a fan of their buffet and thus always order alacarte                                                  service at times can be on the slower side but food is worth the wait                  n  overdelighted by the service and food provided at this place  a royal and ethnic atmosphere builds a strong essence of being in india and also the quality and taste of food is truly authentic  i would totally recommend to visit this place once                  n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome                 n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome                 n  the place is nice and comfortable  food wise all jalea outlets maintain a good standard  the soya chaap was a standout dish  clearly one of trademark dish as per me and a must try  n nthe only concern is the parking  it very congested and limited to just  cars  the basement parking is very steep and makes it cumbersome   '----
+
+===== remove multiple spaces
+
+
++*In[207]:*+
+[source, ipython3]
+----
+re.sub(' +',' ',data4)
+----
+
+
++*Out[207]:*+
+----' n a beautiful place to dine in the interiors take you back to the mughal era the lightings are just perfect we went there on the occasion of christmas and so they had only limited items available but the taste and service was not compromised at all the only complaint is that the breads could have been better would surely like to come here again n i was here for dinner with my family on a weekday the restaurant was completely empty ambience is good with some good old hindi music seating arrangement are good too we ordered masala papad panner and baby corn starters lemon and corrionder soup butter roti olive and chilli paratha food was fresh and good service is good too good for family hangout ncheers n its a restaurant near to banashankari bda me along with few of my office friends visited to have buffet but unfortunately they only provide veg buffet on inquiring they said this place is mostly visited by vegetarians anyways we ordered ala carte items which took ages to come food was ok ok definitely not visiting anymore n we went here on a weekend and one of us had the buffet while two of us took ala carte firstly the ambience and service of this place is great the buffet had a lot of items and the good was good we had a pumpkin halwa intm the dessert which was amazing must try the kulchas are great here cheers n the best thing about the place is it s ambiance second best thing was yummy food we try buffet and buffet food was not disappointed us ntest nquality nservice staff was very professional and friendly n noverall e perience was e cellent n nsubirmajumder wi site com n great food and pleasant ambience e pensive but coll place to chill and rela n nservice is really very very good and friendly staff n nfood nservice nambience noverall n good ambience with tasty food ncheese chilli paratha with bhutta palak methi curry is a good combo nlemon chicken in the starters is a must try item negg fried rice was also quite tasty nin the mocktails recommend alice in junoon do not miss it n you can t go wrong with jalsa never been a fan of their buffet and thus always order alacarte service at times can be on the slower side but food is worth the wait n overdelighted by the service and food provided at this place a royal and ethnic atmosphere builds a strong essence of being in india and also the quality and taste of food is truly authentic i would totally recommend to visit this place once n the place is nice and comfortable food wise all jalea outlets maintain a good standard the soya chaap was a standout dish clearly one of trademark dish as per me and a must try n nthe only concern is the parking it very congested and limited to just cars the basement parking is very steep and makes it cumbersome n the place is nice and comfortable food wise all jalea outlets maintain a good standard the soya chaap was a standout dish clearly one of trademark dish as per me and a must try n nthe only concern is the parking it very congested and limited to just cars the basement parking is very steep and makes it cumbersome n the place is nice and comfortable food wise all jalea outlets maintain a good standard the soya chaap was a standout dish clearly one of trademark dish as per me and a must try n nthe only concern is the parking it very congested and limited to just cars the basement parking is very steep and makes it cumbersome '----
+
+==== analyse review of a particular restaurant
+
+
++*In[208]:*+
+[source, ipython3]
+----
+dataset=df[df['rest_type']=='Quick Bites']
+----
+
+
++*In[209]:*+
+[source, ipython3]
+----
+type(dataset['reviews_list'][3])
+----
+
+
++*Out[209]:*+
+----str----
+
+
++*In[210]:*+
+[source, ipython3]
+----
+total_review=' '
+for review in dataset['reviews_list']:
+    review=review.lower()
+    review=re.sub('[^a-zA-Z]', ' ',review)
+    review=re.sub('rated', ' ',review)
+    review=re.sub('x',' ',review)
+    review=re.sub(' +',' ',review)
+    total_review=total_review + str(review)
+ 
+----
+
+
++*In[211]:*+
+[source, ipython3]
+----
+wordcloud = WordCloud(width = 800, height = 800, 
+                background_color ='white', 
+                stopwords = stopwords, 
+                min_font_size = 10).generate(total_review) 
+# plot the WordCloud image                        
+plt.figure(figsize = (8, 8)) 
+plt.imshow(wordcloud) 
+plt.axis("off") 
+----
+
+
++*Out[211]:*+
+----(-0.5, 799.5, 799.5, -0.5)
+![png](output_298_1.png)
+----
+
+
++*In[212]:*+
+[source, ipython3]
+----
+def importance(restaurant):
+    dataset=df[df['rest_type']==restaurant]
+    total_review=' '
+    for review in dataset['reviews_list']:
+        review=review.lower()
+        review=re.sub('[^a-zA-Z]', ' ',review)
+        review=re.sub('rated', ' ',review)
+        review=re.sub('x',' ',review)
+        review=re.sub(' +',' ',review)
+        total_review=total_review + str(review)
+    wordcloud = WordCloud(width = 800, height = 800, 
+            background_color ='white', 
+            stopwords = set(STOPWORDS), 
+            min_font_size = 10).generate(total_review) 
+    # plot the WordCloud image                        
+    plt.figure(figsize = (8, 8)) 
+    plt.imshow(wordcloud) 
+    plt.axis("off") 
+----
+
+
++*In[213]:*+
+[source, ipython3]
+----
+importance('Quick Bites')
+----
+
+
++*Out[213]:*+
+----
+![png](output_300_0.png)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
