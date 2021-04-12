@@ -1,0 +1,1328 @@
+==== whenever a data is collected over a period of Time, that is
+basically known as Time Series
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth=pd.read_csv('F:\Time_Series Data Analysis\data science Tutorials/daily-total-female-births-CA.csv',parse_dates=[0],index_col=0)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+bb=f_birth.values
+bb
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+type(bb)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### to get size of dataframe
+f_birth.size
+----
+
+==== getting distribution of data to check whether I have any outlier or
+not
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+import seaborn as sns
+sns.distplot(f_birth)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### if we want to plot with respect to time or index , we can use df.plot()
+f_birth.plot()
+----
+
+==== this somehow a very stationery series data, what exactly is a
+stationery data, so data that has no trend no that has constant mean &
+std dev throughout data
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.describe()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.tail()
+----
+### Smoothening your series using moving average
+    Rolling is just like a rolling 5 days, rolling 6 days, rolling 7 days
+    window  & I can say its a window that we have considered for Moving average
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_mean=f_birth.rolling(window=20).mean()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_mean.head(30)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### plotting moving average
+f_birth_mean.plot()
+----
+
+==== in this plot, we will see we have a spike over here in OCT & then
+it comes down, if we will see there is a very less trend here at all
+
+==== in a similar way, i can play with window perimeter as well as
+window=5 or window=10
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.rolling(window=5).mean().plot()
+----
+
+==== this technique has already used lots of time in Stock Market &
+stock Analyst used basically Moving average to remove such noise in data
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== types of models in Time-Series :
+
+....
+ 1.Base line model
+ 2.Exponential model
+ 3.AR model
+ 4.MA model
+ 5.ARIMA model
+ 6.SARIMA model(Seasonal ARIMA)
+....
+
+==== baseline model=naive model in which , we assume as lets say today
+no of births is somewhere around 41,so we assume as tommorow also we get
+41 births
+
+....
+ summary for baseline:--> the recent history is a best refection of the future
+....
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+value=f_birth['births']
+value
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+forecast=f_birth['births'].shift(1)
+forecast
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+birth_df=pd.concat([value,forecast],axis=1)
+birth_df.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+birth_df.columns=['actual_birth','forecast_birth']
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+birth_df.head(20)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== Once we have done this, now we have to identify errors so there are
+2 ways to figure out the error
+
+....
+ 1.Either u can figure it out on complete dataset
+ 2.or we can use train_test_split
+ 
+....
+
+but in this train_test_split doesnt makes sense bcz this is a naive
+model,previous value is used for current value I will both the
+approches, and its upto what we exacty want.. if data is small, like we
+have 300 observations we can do it on entire data, but if it is having
+lets say 30000 entries , in such, it is not advisable we just take a
+partial data by doing some sampling or directly taking it & then go
+ahead & use the error..
+
+we can computer error by importing mean_squared_error module
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from sklearn.metrics import mean_squared_error
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### then check accuracy
+np.sqrt(mean_squared_error(birth_df['forecast_birth'][1:],birth_df['actual_birth'][1:]))
+----
+#### why [1:] bcz we have a missing value at 1st index,thats why [1:]
+==== why np.sqrt, bcz mean_squared_error gives square of error , and
+then by calling np.sqrt we get actual error
+
+==== if we have outlier in data, This error will increase, dats why we
+have to deal with outlier
+
+==== using Base-line, we can say using this basic technique we are
+getting error of 9 births every day, it means error of +-9 is going to
+happen in your prediction
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== for this use-case we will come to ARIMA
+
+==== ACF,PACF
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
+from statsmodels.graphics.api import qqplot
+----
+
+==== to get your q value for your ARIMA ,i am going to visualise
+Auto-corelation chart
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+plot_acf(f_birth['births']) ## p=2,3
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+plot_pacf(f_birth) ## gives value of q=(3,4)
+----
+### d=0 as already stationery here
+
++*In[ ]:*+
+[source, ipython3]
+----
+training_data=f_birth[0:320]
+test_data=f_birth[320:]
+### create test that is basically unseen to our model, or which is basically is used for evalaution
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+training_data.size
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+test_data.size
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from statsmodels.tsa.arima_model import ARIMA
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### arima= ARIMA(training_data,order=(p,d,q))
+
+arima= ARIMA(training_data,order=(2,1,3))
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### then doing model.fit ie fitting our model to data
+model=arima.fit()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+model.aic
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+pred= model.forecast(steps=45)[0]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+pred
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+test_data
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#### now we can compare our prediction in some cases, we are doing very well whereas in some cases, we are not doing good prediction
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+np.sqrt(mean_squared_error(test_data,pred))
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== now u will see it is better than the model that we have created as
+Error decreases from 9 to 6.6
+
+=== and in the future we are going to play with diff pairs of (P,d,q) or
+we can choose best pair by just automating it using Hyperparameter
+tuning
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== another way of decreasing more error is by just normalizing &
+standarizing data
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+==== Normalization- useful in 2 cases-
+
+....
+  1. if ur data is on different scale, Lets say height of 100 students are on different scale then in such scenario, we can bring our data to same scale,after normalize our data comes in a range of [0,1]
+  
+  2.bcz some algo works better work better if ur data is normalized lets say Linear Regression, Logistic Regression
+....
+
+==== normalization= (xi-min) / (max-min), we can create our own function
+to perform normalization but scikit provides us in-built func to perform
+normalization
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.min()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.max()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+(35-23)/(72-23)
+----
+
+===== 35 getting normalized to 0.24489
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from sklearn.preprocessing import MinMaxScaler
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+data=f_birth.values
+----
+
+====== as MinMaxScaler receives Data in the form of array
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+scaler=MinMaxScaler()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+birth_normalize=scaler.fit_transform(f_birth)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+birth_normalize
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+birth_normalize[0]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+===== so now my data has been normalized so now we are ready to insert
+this data into algorithm
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+training_data=birth_normalize[0:320]
+test_data=birth_normalize[320:]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+training_data[0:5]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+training_data.size
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+test_data.size
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from statsmodels.tsa.arima_model import ARIMA
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### arima= ARIMA(training_data,order=(p,d,q))
+
+arima= ARIMA(training_data,order=(2,1,3))
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+model=arima.fit()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+model.aic
+----
+
+==== now we will see -ve aic, earlier we have positive aic
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+pred= model.forecast(steps=45)[0]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+pred
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from sklearn.metrics import mean_squared_error
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+np.sqrt(mean_squared_error(test_data,pred))
+----
+
+==== very less error
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== now to get your actual forecast, u have to perform inverse
+transformation
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+actual_forecast=scaler.inverse_transform(pred.reshape(-1,1))
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+actual_forecast
+----
+
+===== to get your actual error
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+np.sqrt(mean_squared_error(scaler.inverse_transform(test_data),actual_forecast))
+----
+
+===== now we will see whether after Data transformation our error
+reduces just a little bit
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== feature engineering on Time SEries Data
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth=pd.read_csv('F:\Time_Series Data Analysis\data science Tutorials/daily-total-female-births-CA.csv',parse_dates=[0],index_col=0)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['lag1']=f_birth.shift(1)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['lag2']=f_birth['births'].shift(2)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['lag3']=f_birth['births'].shift(3)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+==== moving average
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['MA3']=f_birth['births'].rolling(window=3).mean()
+
+# window: This is the number of observations used for calculating the statistic. 
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['MA4']=f_birth['births'].rolling(window=4).mean()
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+##### lets day u r expertise in any area & u kmow within 7 days, the maximum value is the true reflector of our business as we are in high growth era
+##### & minimum value is a true reflector of our baseline, so in such case instead of mean , u can call min & max function
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#### lets say 5 is the window size or 5 is the business period
+f_birth['MAX_5']=f_birth['births'].rolling(window=5).max()
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['MIN_5']=f_birth['births'].rolling(window=5).min()
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### now we will see just having a basic knowledge of Lag and some subject matter expertise, we can create so many variables
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+###### to more u will dig in data & business,more u will figure it about feature enginering
+###### u can say ,feature engineering is a most creative part apart from intrepreting the model
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### lets say to capture day from date
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['day']=f_birth.index.day
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['month']=f_birth.index.month
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+----
+
+==== we can also create dummy variable if we want to explore our data
+more
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['year']=f_birth.index.year
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.head()
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#### remove na values
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.dropna(inplace=True)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== 4. Stationery Time series Testing
+
+==== test whether your time-series has been stationery or not
+
+==== bcz stationery time-series helps us to make prediction better
+
+==== stationery is all about when ur mean & variance is constant over a
+period of time
+1.visualizing Time series
+2.Dickey Fuller Test(Statistical Test)
+3.Constant mean & variance
+==== getting trend
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['births'].plot()
+----
+
+==== now here we will see there is a bit of trend or seasonality here,
+as variance is not constant here
+
+==== from this we will visualise it doesnt have a srong seasonlity but a
+bit of seasonality
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth['births'].hist()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== looks to normal distribution but little bit skewes to right side
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_1=f_birth[0:201]
+f_birth_2=f_birth[201:]
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_1.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_2.head()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_1['births'].mean()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_2['births'].mean()
+----
+
+==== we know our assumption for our stationery time-series is that mean
+should be same, but here mean is variating
+
+=== so we can say it is not stationery lets run another test to check
+whether it is stationery or not
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_1['births'].var()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth_2['births'].var()
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+==== hence by visualising graph we can conclude yahh it has a bit of
+seasonality with a constant variance
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== Next is Dickey Fuller Test
+
+....
+##### dickery fuller test or Augumented Dickey Fuller(adfuller) test, so this test basically tells us how strongly Time-series is defined by  a trend
+....
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#### adfuller gives 5 values ['ADF Test Statistic','p-value','#Lags Used','Number of Observations Used']
+#most imp is p-value
+#this is almost similar to Hypothesis testing,whereas Null hypo which says Data is not Stationery
+#whereas Alternate hypo says data is stationery
+
+#lags are those which are our previous Data
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from statsmodels.tsa.stattools import adfuller
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#### apply adfuller on dataframe
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+def adfuller_test(column):
+    result=adfuller(column)
+    labels = ['ADF Test Statistic','p-value','#Lags Used','Number of Observations Used']
+    for value,label in zip(result,labels):
+        print(' {}: {}'.format(label,value))
+    if result[1] <= 0.05:
+        print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
+    else:
+        print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
+    #Ho: ie null hypoIt is non stationary
+#H1: ie Alternate Hypo ,It is stationary
+#zip basically combines result,labels
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+adfuller_test(f_birth_1['births'])
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#adfuller gives 5 values ['ADF Test Statistic','p-value','#Lags Used','Number of Observations Used']
+#most imp is p-value
+#this is almost similar to Hypothesis testing,whereas Null hypo which says Data is not Stationery
+#whereas Alternate hypo says data is stationery
+
+----
+
+....
+if Pvalue<0.05 ,we reject Null hypo ie alternate hypo is true,ie data is stationery
+....
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+=== tune your parameter of time-series (Hyper-parameter Tuning)
+
+==== all about playing with params (P,d,q) so whichever pair will give
+less error select those pair
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from statsmodels.tsa.arima_model import ARIMA
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+from sklearn.metrics import mean_squared_error
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth=pd.read_csv('F:\Time_Series Data Analysis\data science Tutorials/daily-total-female-births-CA.csv',parse_dates=[0],index_col=0)
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+#### now define hyper-para=meters 
+p_values=range(0,8)
+d_values=range(0,3)
+q_values=range(0,5)
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+for p in p_values:
+    for d in d_values:
+        for q in q_values:
+            order=(p,d,q)
+            print((order))
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+p_values
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+f_birth.shape
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+import warnings
+warnings.filterwarnings('ignore')
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+### so we are just trying to provide pairs of (p,d,q) & whichever pair will give me least error i will consider that pair, 
+for p in p_values:
+    for d in d_values:
+        for q in q_values:
+            order=(p,d,q)
+            train=f_birth[0:300]
+            test=f_birth[300:]
+            ### now we have train & test data that we can pass to our algorithm
+            predictions=[]
+            for i in range(len(test)):
+                try:
+                    arima=ARIMA(train,order)
+                    ##displacement=0
+                    model=arima.fit(disp=0)
+                    pred_y=model.forecast()[0]
+                    predictions.append(pred_y)
+                    error=mean_squared_error(test,predictions)
+                    print('MSE is {} with order {}'.format(error,order))
+                except:
+                    continue
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
+
+
++*In[ ]:*+
+[source, ipython3]
+----
+
+----
